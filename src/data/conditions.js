@@ -1,0 +1,67 @@
+function reading({
+  wave,
+  waveDir,
+  swell,
+  period,
+  current,
+  currentDir,
+  wind,
+  windDir,
+  temp,
+  rain = 0,
+  weather,
+}) {
+  return {
+    waveHeightM: wave,
+    waveDirection: waveDir,
+    swellHeightM: swell,
+    swellPeriodS: period,
+    currentSpeedMs: current,
+    currentDirection: currentDir,
+    windSpeedKmh: wind,
+    windDirection: windDir,
+    temperatureC: temp,
+    precipitationMm: rain,
+    weather,
+  };
+}
+
+export const conditionsByBeachId = {
+  baga: reading({ wave: 1.25, waveDir: 'SW', swell: 1.4, period: 9, current: 0.32, currentDir: 'Alongshore north', wind: 18, windDir: 'W', temp: 30, weather: 'Partly cloudy' }),
+  calangute: reading({ wave: 0.85, waveDir: 'W', swell: 0.9, period: 8, current: 0.22, currentDir: 'Weak alongshore', wind: 16, windDir: 'W', temp: 30, weather: 'Sunny' }),
+  anjuna: reading({ wave: 1.45, waveDir: 'SW', swell: 1.6, period: 11, current: 0.38, currentDir: 'Alongshore north', wind: 20, windDir: 'SW', temp: 29, weather: 'Sunny' }),
+  vagator: reading({ wave: 1.55, waveDir: 'SW', swell: 1.7, period: 10, current: 0.92, currentDir: 'Strong alongshore', wind: 27, windDir: 'W', temp: 29, weather: 'Windy' }),
+  palolem: reading({ wave: 0.45, waveDir: 'SW', swell: 0.5, period: 8, current: 0.12, currentDir: 'Weak flood into the bay', wind: 11, windDir: 'W', temp: 29, weather: 'Calm and clear' }),
+  agonda: reading({ wave: 0.7, waveDir: 'W', swell: 0.8, period: 9, current: 0.18, currentDir: 'Weak alongshore', wind: 14, windDir: 'NW', temp: 29, weather: 'Sunny' }),
+  kovalam: reading({ wave: 0.95, waveDir: 'SW', swell: 1.1, period: 9, current: 0.28, currentDir: 'Mild southerly set', wind: 17, windDir: 'W', temp: 29, weather: 'Partly cloudy' }),
+  varkala: reading({ wave: 1.65, waveDir: 'W', swell: 1.9, period: 12, current: 0.48, currentDir: 'Alongshore south', wind: 19, windDir: 'NW', temp: 29, weather: 'Sunny' }),
+  marari: reading({ wave: 0.55, waveDir: 'W', swell: 0.6, period: 8, current: 0.15, currentDir: 'Weak', wind: 12, windDir: 'NW', temp: 29, weather: 'Calm' }),
+  cherai: reading({ wave: 0.6, waveDir: 'W', swell: 0.7, period: 7, current: 0.2, currentDir: 'Weak alongshore', wind: 15, windDir: 'NW', temp: 30, rain: 0.2, weather: 'Cloudy' }),
+  kozhikode: reading({ wave: 1.1, waveDir: 'W', swell: 1.2, period: 8, current: 0.36, currentDir: 'Alongshore north', wind: 21, windDir: 'W', temp: 30, weather: 'Partly cloudy' }),
+  marina: reading({ wave: 0.65, waveDir: 'E', swell: 0.5, period: 6, current: 0.62, currentDir: 'Alongshore south', wind: 24, windDir: 'NE', temp: 31, weather: 'Hazy' }),
+  elliot: reading({ wave: 0.75, waveDir: 'E', swell: 0.7, period: 7, current: 0.33, currentDir: 'Mild alongshore', wind: 22, windDir: 'NE', temp: 31, weather: 'Hazy' }),
+  mahabalipuram: reading({ wave: 0.9, waveDir: 'E', swell: 1.0, period: 9, current: 0.25, currentDir: 'Weak', wind: 18, windDir: 'E', temp: 30, weather: 'Sunny' }),
+  covelong: reading({ wave: 1.35, waveDir: 'SE', swell: 1.5, period: 12, current: 0.3, currentDir: 'Along the point', wind: 16, windDir: 'NE', temp: 29, weather: 'Sunny' }),
+  kanyakumari: reading({ wave: 1.9, waveDir: 'SW', swell: 2.2, period: 9, current: 0.7, currentDir: 'Confluence set', wind: 44, windDir: 'SW', temp: 30, weather: 'Windy' }),
+  puri: reading({ wave: 2.3, waveDir: 'SE', swell: 2.6, period: 11, current: 0.55, currentDir: 'Alongshore north', wind: 32, windDir: 'S', temp: 29, rain: 1.2, weather: 'Rough sea, cloudy' }),
+  chandrabhaga: reading({ wave: 1.7, waveDir: 'SE', swell: 1.8, period: 10, current: 0.42, currentDir: 'Alongshore', wind: 26, windDir: 'SE', temp: 29, weather: 'Cloudy' }),
+  gopalpur: reading({ wave: 0.8, waveDir: 'S', swell: 0.9, period: 8, current: 0.2, currentDir: 'Weak', wind: 14, windDir: 'S', temp: 28, rain: 4, weather: 'Overcast' }),
+  chandipur: reading({ wave: 0.4, waveDir: 'E', swell: 0.3, period: null, current: 0.18, currentDir: 'Tidal flat flood', wind: 12, windDir: 'NE', temp: 28, weather: 'Calm' }),
+  om: reading({ wave: 1.15, waveDir: 'W', swell: 1.3, period: 10, current: 0.34, currentDir: 'Around the headland', wind: 18, windDir: 'W', temp: 29, weather: 'Sunny' }),
+  murudeshwar: reading({ wave: 0.8, waveDir: 'W', swell: 0.95, period: 9, current: 0.22, currentDir: 'Weak bay circulation', wind: 15, windDir: 'NW', temp: 29, weather: 'Partly cloudy' }),
+  malpe: reading({ wave: 0.7, waveDir: 'W', swell: 0.75, period: 8, current: 0.2, currentDir: 'Weak, stronger in the harbour channel', wind: 19, windDir: 'W', temp: 30, weather: 'Sunny' }),
+  karwar: reading({ wave: 0.9, waveDir: 'W', swell: 1.0, period: 8, current: 0.26, currentDir: 'Weak, stronger on the river bar', wind: 17, windDir: 'W', temp: 29, weather: 'Cloudy' }),
+  juhu: reading({ wave: 0.5, waveDir: 'W', swell: 0.4, period: 5, current: 0.3, currentDir: 'Alongshore', wind: 18, windDir: 'NW', temp: 32, weather: 'Hazy' }),
+  aksa: reading({ wave: 1.4, waveDir: 'W', swell: 1.5, period: 9, current: 0.58, currentDir: 'Alongshore south', wind: 29, windDir: 'W', temp: 31, weather: 'Windy' }),
+  alibaug: reading({ wave: 0.6, waveDir: 'W', swell: 0.7, period: 8, current: 0.24, currentDir: 'Weak', wind: 16, windDir: 'NW', temp: 30, weather: 'Sunny' }),
+  tarkarli: reading({ wave: 0.55, waveDir: 'SW', swell: 0.6, period: 9, current: 0.14, currentDir: 'Weak', wind: 12, windDir: 'W', temp: 29, weather: 'Clear' }),
+  ganpatipule: reading({ wave: 1.05, waveDir: 'W', swell: 1.2, period: 9, current: 0.3, currentDir: 'Alongshore', wind: 20, windDir: 'W', temp: 29, weather: 'Partly cloudy' }),
+  radhanagar: reading({ wave: 0.65, waveDir: 'W', swell: 0.8, period: 11, current: 0.16, currentDir: 'Weak', wind: 10, windDir: 'SW', temp: 28, weather: 'Clear' }),
+  elephant: reading({ wave: 0.5, waveDir: 'NW', swell: 0.55, period: 8, current: 0.18, currentDir: 'Weak over the reef', wind: 12, windDir: 'W', temp: 28, weather: 'Clear' }),
+  corbyns: reading({ wave: 0.85, waveDir: 'E', swell: 0.7, period: 6, current: 0.72, currentDir: 'Along the seawall', wind: 23, windDir: 'E', temp: 29, rain: 0.4, weather: 'Cloudy' }),
+  bharatpur: reading({ wave: 0.35, waveDir: 'E', swell: 0.3, period: 7, current: 0.1, currentDir: 'Very weak', wind: 9, windDir: 'E', temp: 28, weather: 'Clear' }),
+};
+
+export function getConditions(beachId) {
+  return conditionsByBeachId[beachId] || null;
+}

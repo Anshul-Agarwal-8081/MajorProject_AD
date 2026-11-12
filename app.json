@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "CoastSafe India",
+    "slug": "coastsafe-india",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "in.coastsafe.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "CoastSafe India uses your location to estimate distance to beaches and to show nearby demonstration alerts. A simulated location works if you decline."
+      }
+    },
+    "android": {
+      "package": "in.coastsafe.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B3A5B",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "CoastSafe India uses your location to estimate distance to beaches and to show nearby demonstration alerts."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0B3A5B",
+          "enableRemoteNotifications": false
+        }
+      ]
+    ]
+  }
+}
