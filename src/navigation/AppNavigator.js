@@ -1,15 +1,33 @@
+// src/navigation/AppNavigator.js
+// ---------------------------------------------------------
+// Sets up all navigation for CoastSafe India.
+//
+// We use two navigators from React Navigation:
+//
+//  1. createBottomTabNavigator  — the 4 icons at the bottom
+//     Tabs: Home | Beaches | Alerts | Profile
+//
+//  2. createNativeStackNavigator — a stack on top of the tabs
+//     This lets us push new full screens (like BeachDetail)
+//     on top of the tabs without replacing them.
+//
+// Navigation flow:
+//   App loads → MainTabs (bottom bar visible)
+//     ↓ user taps a beach
+//   BeachDetail slides in (bottom bar hidden)
+//     ↓ user taps Back
+//   Returns to the tab they were on
+// ---------------------------------------------------------
+
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../theme';
 
-// Screens
+// ── Import all screens ─────────────────────────────────────
 import HomeScreen from '../screens/HomeScreen';
-import ExploreScreen from '../screens/ExploreScreen';
-import MapScreen from '../screens/MapScreen';
+import BeachesScreen from '../screens/BeachesScreen';
 import AlertsScreen from '../screens/AlertsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import BeachDetailScreen from '../screens/BeachDetailScreen';
@@ -17,125 +35,71 @@ import BeachDetailScreen from '../screens/BeachDetailScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+// ── Tab icon definitions ───────────────────────────────────
+// 'active' is shown when the tab is selected, 'inactive' when not.
 const TAB_ICONS = {
-  Home: { active: 'home', inactive: 'home-outline' },
-  Explore: { active: 'compass', inactive: 'compass-outline' },
-  Map: { active: 'map', inactive: 'map-outline' },
-  Alerts: { active: 'notifications', inactive: 'notifications-outline' },
-  Profile: { active: 'person', inactive: 'person-outline' },
+  Home:    { active: 'home',          inactive: 'home-outline' },
+  Beaches: { active: 'water',         inactive: 'water-outline' },
+  Alerts:  { active: 'notifications', inactive: 'notifications-outline' },
+  Profile: { active: 'person',        inactive: 'person-outline' },
 };
 
-function BottomTabNavigator() {
+// ── Bottom Tab Navigator ───────────────────────────────────
+function BottomTabs() {
   return (
     <Tab.Navigator
-      initialRouteName="Home"
       screenOptions={({ route }) => ({
+        // Hide the default header — we build our own in each screen
         headerShown: false,
-        tabBarActiveTintColor: colors.teal,
-        tabBarInactiveTintColor: colors.muted,
+
+        // Icon colour when selected vs not selected
+        tabBarActiveTintColor: '#0B3A5B',
+        tabBarInactiveTintColor: '#94a3b8',
+
+        // The tab bar itself
         tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopColor: colors.line,
-          borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-          paddingTop: 8,
+          backgroundColor: '#ffffff',
+          borderTopColor: '#e2e8f0',
+          height: 62,
+          paddingBottom: 10,
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: 2,
         },
-        tabBarIcon: ({ focused, color, size }) => {
-          const iconConfig = TAB_ICONS[route.name] || {
-            active: 'square',
-            inactive: 'square-outline',
-          };
-          const iconName = focused ? iconConfig.active : iconConfig.inactive;
 
-          return (
-            <View style={focused ? styles.activeTabIconWrap : null}>
-              <Ionicons name={iconName} size={22} color={color} />
-            </View>
-          );
+        // Pick the right Ionicons icon for each tab
+        tabBarIcon: ({ focused, color }) => {
+          const icons = TAB_ICONS[route.name];
+          const iconName = focused ? icons.active : icons.inactive;
+          return <Ionicons name={iconName} size={22} color={color} />;
         },
       })}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarLabel: 'Home',
-        }}
-      />
-      <Tab.Screen
-        name="Explore"
-        component={ExploreScreen}
-        options={{
-          tabBarLabel: 'Explore',
-        }}
-      />
-      <Tab.Screen
-        name="Map"
-        component={MapScreen}
-        options={{
-          tabBarLabel: 'Map',
-        }}
-      />
-      <Tab.Screen
-        name="Alerts"
-        component={AlertsScreen}
-        options={{
-          tabBarLabel: 'Alerts',
-          tabBarBadge: 7,
-          tabBarBadgeStyle: {
-            backgroundColor: colors.notSuitable,
-            color: colors.white,
-            fontSize: 10,
-            fontWeight: '800',
-            minWidth: 16,
-            height: 16,
-            borderRadius: 8,
-            lineHeight: 15,
-          },
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          tabBarLabel: 'Profile',
-        }}
-      />
+      <Tab.Screen name="Home"    component={HomeScreen} />
+      <Tab.Screen name="Beaches" component={BeachesScreen} />
+      <Tab.Screen name="Alerts"  component={AlertsScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
 
+// ── Root Stack Navigator ───────────────────────────────────
+// MainTabs is the first screen (shows the bottom bar).
+// BeachDetail is pushed on top when a beach card is tapped.
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          animation: 'slide_from_right',
-        }}
-      >
-        <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainTabs"    component={BottomTabs} />
         <Stack.Screen
           name="BeachDetail"
           component={BeachDetailScreen}
-          options={{
-            animation: 'slide_from_bottom',
-          }}
+          // Slide up from the bottom for a natural mobile feel
+          options={{ animation: 'slide_from_bottom' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  activeTabIconWrap: {
-    transform: [{ scale: 1.08 }],
-  },
-});
-

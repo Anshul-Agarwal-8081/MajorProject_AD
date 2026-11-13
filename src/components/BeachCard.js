@@ -1,138 +1,57 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, shadow } from '../theme';
-import SuitabilityBadge from './SuitabilityBadge';
+// src/components/BeachCard.js
+// ---------------------------------------------------------
+// A single card shown in the Beaches screen list.
+// Displays: beach photo, name, state, description, swim status.
+//
+// Props:
+//   beach  — a beach object from src/data/beachList.js
+//   onPress — function called when the card is tapped
+// ---------------------------------------------------------
 
-export default function BeachCard({ beach, onPress, variant = 'standard', preferredActivity = 'swimming' }) {
-  const [imageError, setImageError] = useState(false);
-  const isCompact = variant === 'compact';
-  const isHorizontal = variant === 'horizontal';
+import React from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 
-  // Get status for current or selected activity
-  const activityAssessment = beach.assessment?.[preferredActivity] || beach.assessment?.swimming;
-  const status = activityAssessment?.status || 'suitable';
+// Map each status string to a colour for the badge
+const STATUS_COLOR = {
+  Safe: '#16a34a',      // green
+  Caution: '#d97706',   // amber
+  'Not Safe': '#dc2626', // red
+};
+const STATUS_BG = {
+  Safe: '#dcfce7',
+  Caution: '#fef3c7',
+  'Not Safe': '#fee2e2',
+};
 
-  const distanceText = beach.distanceKm != null
-    ? `${Number(beach.distanceKm).toFixed(1)} km away`
-    : beach.distance || 'Coastal India';
+export default function BeachCard({ beach, onPress }) {
+  // Pick the right colours for the swimming status badge
+  const color = STATUS_COLOR[beach.swimming] || '#6b7280';
+  const bg = STATUS_BG[beach.swimming] || '#f3f4f6';
 
-  if (isCompact) {
-    return (
-      <TouchableOpacity
-        style={styles.compactCard}
-        onPress={onPress}
-        activeOpacity={0.88}
-      >
-        <View style={styles.compactImageWrapper}>
-          <Image
-            source={{
-              uri: imageError
-                ? 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80'
-                : beach.image,
-            }}
-            style={styles.compactImage}
-            onError={() => setImageError(true)}
-          />
-          <View style={styles.compactStatusOverlay}>
-            <SuitabilityBadge status={status} size="small" />
-          </View>
-        </View>
-
-        <View style={styles.compactContent}>
-          <Text style={styles.compactTitle} numberOfLines={1}>
-            {beach.name}
-          </Text>
-
-          <View style={styles.locationRow}>
-            <Ionicons name="location-sharp" size={12} color={colors.teal} />
-            <Text style={styles.locationText} numberOfLines={1}>
-              {beach.city}, {beach.state}
-            </Text>
-          </View>
-
-          <View style={styles.metaRow}>
-            <View style={styles.distanceChip}>
-              <Ionicons name="navigate-outline" size={11} color={colors.ocean} />
-              <Text style={styles.distanceText}>{distanceText}</Text>
-            </View>
-            {beach.conditions?.waveHeightM != null && (
-              <View style={styles.waveChip}>
-                <Ionicons name="water-outline" size={11} color={colors.teal} />
-                <Text style={styles.waveText}>{beach.conditions.waveHeightM}m wave</Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        <View style={styles.chevronWrap}>
-          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-        </View>
-      </TouchableOpacity>
-    );
-  }
-
-  // Standard Horizontal Carousel Card
   return (
-    <TouchableOpacity
-      style={[
-        styles.standardCard,
-        isHorizontal ? styles.horizontalCardWidth : styles.fullWidthCard,
-      ]}
-      onPress={onPress}
-      activeOpacity={0.9}
-    >
-      <View style={styles.imageContainer}>
-        <Image
-          source={{
-            uri: imageError
-              ? 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80'
-              : beach.image,
-          }}
-          style={styles.cardImage}
-          onError={() => setImageError(true)}
-        />
-        <View style={styles.badgeOverlay}>
-          <SuitabilityBadge status={status} size="small" />
-        </View>
-        <View style={styles.distanceBadge}>
-          <Ionicons name="navigate" size={10} color={colors.white} />
-          <Text style={styles.distanceBadgeText}>{distanceText}</Text>
-        </View>
-      </View>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+      {/* Left: beach thumbnail */}
+      <Image source={{ uri: beach.image }} style={styles.image} />
 
-      <View style={styles.cardBody}>
-        <Text style={styles.cardTitle} numberOfLines={1}>
-          {beach.name}
+      {/* Right: text info */}
+      <View style={styles.info}>
+        <Text style={styles.name}>{beach.name}</Text>
+        <Text style={styles.state}>{beach.state}</Text>
+        <Text style={styles.description} numberOfLines={2}>
+          {beach.description}
         </Text>
-        <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={12} color={colors.muted} />
-          <Text style={styles.locationText} numberOfLines={1}>
-            {beach.city}, {beach.state}
-          </Text>
-        </View>
 
-        <View style={styles.cardFooter}>
-          <View style={styles.paramItem}>
-            <Text style={styles.paramLabel}>Wave</Text>
-            <Text style={styles.paramVal}>
-              {beach.conditions?.waveHeightM != null ? `${beach.conditions.waveHeightM}m` : '0.8m'}
-            </Text>
-          </View>
-          <View style={styles.paramDivider} />
-          <View style={styles.paramItem}>
-            <Text style={styles.paramLabel}>Wind</Text>
-            <Text style={styles.paramVal}>
-              {beach.conditions?.windSpeedKmh != null ? `${beach.conditions.windSpeedKmh}k/h` : '16k/h'}
-            </Text>
-          </View>
-          <View style={styles.paramDivider} />
-          <View style={styles.paramItem}>
-            <Text style={styles.paramLabel}>Water</Text>
-            <Text style={[styles.paramVal, { color: colors.suitable }]}>
-              {beach.waterQuality?.status || 'Good'}
-            </Text>
-          </View>
+        {/* Swimming status badge — clearly marked as Demo */}
+        <View style={[styles.badge, { backgroundColor: bg }]}>
+          <Text style={[styles.badgeText, { color }]}>
+            🏊 Swimming: {beach.swimming} (Demo)
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -140,177 +59,54 @@ export default function BeachCard({ beach, onPress, variant = 'standard', prefer
 }
 
 const styles = StyleSheet.create({
-  compactCard: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
+  card: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    padding: 10,
-    ...shadow,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  compactImageWrapper: {
-    position: 'relative',
-    width: 95,
-    height: 95,
+    backgroundColor: '#ffffff',
     borderRadius: 12,
+    marginHorizontal: 16,
+    marginVertical: 6,
+    // Shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    // Shadow for Android
+    elevation: 2,
     overflow: 'hidden',
   },
-  compactImage: {
-    width: '100%',
-    height: '100%',
+  image: {
+    width: 100,
+    height: 115,
   },
-  compactStatusOverlay: {
-    position: 'absolute',
-    bottom: 5,
-    left: 5,
-  },
-  compactContent: {
+  info: {
     flex: 1,
-    marginLeft: 12,
-    justifyContent: 'center',
+    padding: 10,
   },
-  compactTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.ink,
-    marginBottom: 3,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  locationText: {
-    fontSize: 12,
-    color: colors.muted,
-    marginLeft: 3,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  distanceChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.turquoiseSoft,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  distanceText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.ocean,
-    marginLeft: 3,
-  },
-  waveChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.foam,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  waveText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.teal,
-    marginLeft: 3,
-  },
-  chevronWrap: {
-    paddingHorizontal: 4,
-  },
-
-  standardCard: {
-    backgroundColor: colors.white,
-    borderRadius: 18,
-    overflow: 'hidden',
-    ...shadow,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  horizontalCardWidth: {
-    width: 220,
-    marginRight: 14,
-  },
-  fullWidthCard: {
-    width: '100%',
-    marginBottom: 16,
-  },
-  imageContainer: {
-    position: 'relative',
-    width: '100%',
-    height: 135,
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-  },
-  badgeOverlay: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-  },
-  distanceBadge: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    backgroundColor: 'rgba(11, 58, 91, 0.85)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  distanceBadgeText: {
-    color: colors.white,
-    fontSize: 10,
-    fontWeight: '600',
-    marginLeft: 3,
-  },
-  cardBody: {
-    padding: 12,
-  },
-  cardTitle: {
+  name: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.ink,
-    marginBottom: 2,
+    color: '#1e293b',
   },
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-  },
-  paramItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  paramLabel: {
-    fontSize: 10,
-    color: colors.muted,
-    fontWeight: '500',
-  },
-  paramVal: {
+  state: {
     fontSize: 12,
-    fontWeight: '700',
-    color: colors.ink,
-    marginTop: 1,
+    color: '#64748b',
+    marginTop: 2,
+    marginBottom: 4,
   },
-  paramDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: colors.line,
+  description: {
+    fontSize: 12,
+    color: '#475569',
+    lineHeight: 17,
+    marginBottom: 7,
+  },
+  badge: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
 });
-

@@ -39,3 +39,19 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# ----------------------------------------------------------------
+# WEB PREVIEW — local only, never committed to git
+# This project is a MOBILE app. Web preview is for quick testing.
+# ----------------------------------------------------------------
+
+# Web packages are installed with --no-save so package.json stays
+# mobile-only. The script that does this is also excluded:
+start-web.sh
+
+# Web build output folders
+/web-build/
+/dist/
+
+# package-lock changes from npm --no-save installs
+package-lock.json
