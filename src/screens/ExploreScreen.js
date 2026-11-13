@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, shadow } from '../theme';
+import { colors } from '../theme';
 import { useCatalogue } from '../hooks/useCatalogue';
 import BeachCard from '../components/BeachCard';
 import SearchBar from '../components/SearchBar';
@@ -57,12 +57,6 @@ export default function ExploreScreen({ route, navigation }) {
   const [selectedActivity, setSelectedActivity] = useState(initialActivity);
   const [selectedSuitability, setSelectedSuitability] = useState(initialSuitability);
   const [selectedSort, setSelectedSort] = useState('distance');
-
-  useEffect(() => {
-    if (route.params?.initialSearch !== undefined) setQuery(route.params.initialSearch);
-    if (route.params?.initialActivity !== undefined) setSelectedActivity(route.params.initialActivity);
-    if (route.params?.initialSuitability !== undefined) setSelectedSuitability(route.params.initialSuitability);
-  }, [route.params]);
 
   // Hook into project's filter engine
   const { filtered } = useCatalogue({
@@ -248,7 +242,7 @@ export default function ExploreScreen({ route, navigation }) {
             beach={item}
             variant="compact"
             preferredActivity={selectedActivity === 'all' ? 'swimming' : selectedActivity}
-            onPress={() => navigation.navigate('BeachDetail', { beachId: item.id })}
+            onPress={() => navigation.navigate('BeachDetail', { beach: item })}
           />
         )}
         contentContainerStyle={styles.listContent}

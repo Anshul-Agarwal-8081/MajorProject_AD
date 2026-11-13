@@ -11,11 +11,12 @@
 // Tap a beach card to open its detail screen.
 // ---------------------------------------------------------
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   TextInput,
+  TouchableOpacity,
   FlatList,
   StyleSheet,
   StatusBar,
@@ -23,7 +24,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-import { beaches } from '../data/beachList';
+import { getBeaches, searchBeaches } from '../services/beachService';
 import BeachCard from '../components/BeachCard';
 import DemoBanner from '../components/DemoBanner';
 import { useApp } from '../context/AppContext';
@@ -32,18 +33,22 @@ export default function BeachesScreen({ navigation }) {
   // searchText is the current value of the search input
   // setSearchText updates it every time the user types a character
   const [searchText, setSearchText] = useState('');
+  const [beaches, setBeaches] = useState([]);
   const { isFavorite, toggleFavorite } = useApp();
+
+  useEffect(() => {
+    let active = true;
+    getBeaches().then(({ beaches: items }) => {
+      if (active) setBeaches(items);
+    });
+    return () => { active = false; };
+  }, []);
 
   // ── Search / filter logic ───────────────────────────────
   // We filter the full beaches array based on what the user typed.
   // .toLowerCase() makes the search case-insensitive.
   // We check if the beach NAME or STATE contains the search query.
-  const filteredBeaches = beaches.filter(beach => {
-    const query = searchText.toLowerCase();
-    const nameMatch = beach.name.toLowerCase().includes(query);
-    const stateMatch = beach.state.toLowerCase().includes(query);
-    return nameMatch || stateMatch;
-  });
+  const filteredBeaches = searchBeaches(beaches, searchText);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -55,6 +60,16 @@ export default function BeachesScreen({ navigation }) {
         <Text style={styles.subheading}>
           {beaches.length} beaches in demo dataset
         </Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.headerAction} onPress={() => navigation.navigate('Explore')}>
+            <Ionicons name="options-outline" size={16} color="#0B3A5B" />
+            <Text style={styles.headerActionText}>Explore filters</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerAction} onPress={() => navigation.navigate('Map')}>
+            <Ionicons name="map-outline" size={16} color="#0B3A5B" />
+            <Text style={styles.headerActionText}>Map</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* ── Demo Data Notice ───────────────────────────────── */}
@@ -82,13 +97,9 @@ export default function BeachesScreen({ navigation }) {
         />
         {/* Only show the clear (✕) button when there is text typed */}
         {searchText.length > 0 && (
-          <Ionicons
-            name="close-circle"
-            size={18}
-            color="#94a3b8"
-            onPress={() => setSearchText('')}
-            style={styles.clearIcon}
-          />
+          <TouchableOpacity onPress={() => setSearchText('')} accessibilityRole="button" accessibilityLabel="Clear beach search" hitSlop={8}>
+            <Ionicons name="close-circle" size={18} color="#94a3b8" style={styles.clearIcon} />
+          </TouchableOpacity>
         )}
       </View>
 
@@ -151,6 +162,9 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginTop: 2,
   },
+  headerActions: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  headerAction: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 9, backgroundColor: '#e7f2f8', paddingHorizontal: 11, paddingVertical: 8 },
+  headerActionText: { fontSize: 12, fontWeight: '700', color: '#0B3A5B' },
 
   // Search bar container
   searchBox: {

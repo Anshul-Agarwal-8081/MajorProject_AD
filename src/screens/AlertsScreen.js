@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, shadow } from '../theme';
-import { alerts } from '../data/alerts';
+import { alerts, filterAlerts } from '../data/alerts';
 import AlertCard from '../components/AlertCard';
 
 const SEVERITY_FILTERS = [
@@ -21,13 +21,12 @@ const SEVERITY_FILTERS = [
   { id: 'advisory', label: 'Advisories' },
 ];
 
-export default function AlertsScreen({ navigation }) {
+export default function AlertsScreen() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedAlertModal, setSelectedAlertModal] = useState(null);
 
   const filteredAlerts = useMemo(() => {
-    if (activeFilter === 'all') return alerts;
-    return alerts.filter((a) => a.severity === activeFilter);
+    return filterAlerts(alerts, activeFilter);
   }, [activeFilter]);
 
   return (
@@ -528,4 +527,3 @@ const styles = StyleSheet.create({
   },
 });
 
- 

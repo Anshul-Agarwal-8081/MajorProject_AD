@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import { getBeachById } from '../services/beachService';
 
 const statusLook = {
   Suitable: { text: '#15803d', bg: '#dcfce7' },
@@ -73,8 +74,19 @@ function StatusRow({ icon, label, status }) {
 
 export default function BeachDetailScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
-  const beach = route.params?.beach;
+  const routeBeach = route.params?.beach;
+  const beachId = route.params?.beachId ?? routeBeach?.id;
+  const [beach, setBeach] = useState(routeBeach || null);
   const { isFavorite, toggleFavorite } = useApp();
+
+  useEffect(() => {
+    let active = true;
+    if (!beachId) return undefined;
+    getBeachById(beachId, routeBeach).then(({ beach: item }) => {
+      if (active && item) setBeach(item);
+    });
+    return () => { active = false; };
+  }, [beachId, routeBeach]);
 
   if (!beach) {
     return (

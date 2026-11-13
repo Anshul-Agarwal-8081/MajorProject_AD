@@ -34,7 +34,7 @@ export default function MapScreen({ navigation }) {
   };
 
   const handleOpenDetail = (beach) => {
-    navigation.navigate('BeachDetail', { beachId: beach.id });
+    navigation.navigate('BeachDetail', { beach });
   };
 
   return (

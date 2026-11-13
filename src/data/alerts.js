@@ -145,3 +145,11 @@ export function alertsForBeach(beach) {
   if (!beach) return [];
   return alerts.filter((alert) => alert.beachIds?.includes(beach.id));
 }
+
+export function filterAlerts(items, filter) {
+  if (filter === 'all') return items;
+  if (filter === 'advisory') {
+    return items.filter((alert) => alert.severity === 'information' || alert.severity === 'advisory');
+  }
+  return items.filter((alert) => alert.severity === filter);
+}

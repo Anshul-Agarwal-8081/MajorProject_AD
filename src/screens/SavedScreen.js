@@ -1,16 +1,22 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { beaches } from '../data/beachList';
 import BeachCard from '../components/BeachCard';
 import { useApp } from '../context/AppContext';
+import { getBeaches, getSavedBeaches } from '../services/beachService';
 
 export default function SavedScreen({ navigation }) {
   const { favorites, isFavorite, toggleFavorite } = useApp();
+  const [beaches, setBeaches] = useState([]);
+  useEffect(() => {
+    let active = true;
+    getBeaches().then(({ beaches: items }) => { if (active) setBeaches(items); });
+    return () => { active = false; };
+  }, []);
   const savedBeaches = useMemo(
-    () => beaches.filter((beach) => favorites.includes(beach.id)),
-    [favorites],
+    () => getSavedBeaches(beaches, favorites),
+    [beaches, favorites],
   );
 
   return (

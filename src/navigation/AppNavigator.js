@@ -33,6 +33,8 @@ import ProfileScreen from '../screens/ProfileScreen';
 import BeachDetailScreen from '../screens/BeachDetailScreen';
 import SavedScreen from '../screens/SavedScreen';
 import AboutScreen from '../screens/AboutScreen';
+import ExploreScreen from '../screens/ExploreScreen';
+import MapScreen from '../screens/MapScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -104,6 +106,8 @@ export default function AppNavigator() {
           options={{ animation: 'slide_from_bottom' }}
         />
         <Stack.Screen name="About" component={AboutScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="Explore" component={ExploreScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="Map" component={MapScreen} options={{ animation: 'slide_from_right' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
