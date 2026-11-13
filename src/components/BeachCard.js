@@ -1,13 +1,3 @@
-// src/components/BeachCard.js
-// ---------------------------------------------------------
-// A single card shown in the Beaches screen list.
-// Displays: beach photo, name, state, description, swim status.
-//
-// Props:
-//   beach  — a beach object from src/data/beachList.js
-//   onPress — function called when the card is tapped
-// ---------------------------------------------------------
-
 import React from 'react';
 import {
   View,
@@ -17,29 +7,19 @@ import {
   StyleSheet,
 } from 'react-native';
 
-// Map each status string to a colour for the badge
-const STATUS_COLOR = {
-  Safe: '#16a34a',      // green
-  Caution: '#d97706',   // amber
-  'Not Safe': '#dc2626', // red
-};
-const STATUS_BG = {
-  Safe: '#dcfce7',
-  Caution: '#fef3c7',
-  'Not Safe': '#fee2e2',
+const statusLook = {
+  Suitable: { color: '#15803d', bg: '#dcfce7' },
+  Caution: { color: '#b45309', bg: '#fef3c7' },
+  'Not Suitable': { color: '#b91c1c', bg: '#fee2e2' },
 };
 
 export default function BeachCard({ beach, onPress }) {
-  // Pick the right colours for the swimming status badge
-  const color = STATUS_COLOR[beach.swimming] || '#6b7280';
-  const bg = STATUS_BG[beach.swimming] || '#f3f4f6';
+  const look = statusLook[beach.swimming] || { color: '#6b7280', bg: '#f3f4f6' };
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-      {/* Left: beach thumbnail */}
       <Image source={{ uri: beach.image }} style={styles.image} />
 
-      {/* Right: text info */}
       <View style={styles.info}>
         <Text style={styles.name}>{beach.name}</Text>
         <Text style={styles.state}>{beach.state}</Text>
@@ -47,10 +27,9 @@ export default function BeachCard({ beach, onPress }) {
           {beach.description}
         </Text>
 
-        {/* Swimming status badge — clearly marked as Demo */}
-        <View style={[styles.badge, { backgroundColor: bg }]}>
-          <Text style={[styles.badgeText, { color }]}>
-            🏊 Swimming: {beach.swimming} (Demo)
+        <View style={[styles.badge, { backgroundColor: look.bg }]}>
+          <Text style={[styles.badgeText, { color: look.color }]} numberOfLines={2}>
+            Swimming: {beach.swimming} (demo)
           </Text>
         </View>
       </View>
@@ -65,12 +44,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 16,
     marginVertical: 6,
-    // Shadow for iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
-    // Shadow for Android
     elevation: 2,
     overflow: 'hidden',
   },
