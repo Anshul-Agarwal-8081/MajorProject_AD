@@ -21,14 +21,13 @@ const RECREATIONAL_SPORTS = [
   { id: 'boating', label: 'Boating', icon: 'navigate-outline' },
 ];
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
   const {
     profile,
     toggleActivity,
     notificationPrefs,
     setNotificationPref,
     locationLabel,
-    favorites,
   } = useApp();
 
   const handleSimulatedAction = (featureName) => {
@@ -180,30 +179,21 @@ export default function ProfileScreen() {
 
           {/* Section: About CoastSafe India */}
           <View style={styles.cardSection}>
-            <View style={styles.cardHeader}>
-              <Ionicons name="information-circle-outline" size={20} color={colors.ocean} />
-              <View>
-                <Text style={styles.cardTitle}>About CoastSafe India</Text>
-                <Text style={styles.cardSubtitle}>Academic Research Project Overview</Text>
+            <TouchableOpacity
+              style={styles.aboutLink}
+              onPress={() => navigation.navigate('About')}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+            >
+              <View style={styles.aboutLinkIcon}>
+                <Ionicons name="information-circle-outline" size={21} color={colors.ocean} />
               </View>
-            </View>
-
-            <Text style={styles.aboutBody}>
-              CoastSafe India is developed as an academic project to explore how coastal oceanographic parameters (wave heights, rip currents, swell, winds, and water quality) can be synthesised into intuitive, color-coded recreational suitability assessments for tourists and citizens across Indian shores.
-            </Text>
-
-            <View style={styles.roadmapBox}>
-              <Text style={styles.roadmapHeading}>Project Roadmap:</Text>
-              <Text style={styles.roadmapItem}>
-                • <Text style={styles.boldText}>Phase 1 (Current):</Text> Frontend UI prototype with comprehensive dummy data, suitability engine, and local filtering.
-              </Text>
-              <Text style={styles.roadmapItem}>
-                • <Text style={styles.boldText}>Phase 2:</Text> PostgreSQL backend, live INCOIS API ingestion & suitability algorithm.
-              </Text>
-              <Text style={styles.roadmapItem}>
-                • <Text style={styles.boldText}>Phase 3:</Text> Real-time push notifications, offline coastal maps & user profiles.
-              </Text>
-            </View>
+              <View style={styles.aboutLinkText}>
+                <Text style={styles.cardTitle}>About CoastSafe India</Text>
+                <Text style={styles.cardSubtitle}>Project purpose and data note</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={19} color={colors.muted} />
+            </TouchableOpacity>
           </View>
 
           {/* Section: Safety Disclaimer */}
@@ -312,6 +302,23 @@ const styles = StyleSheet.create({
     ...shadow,
     borderWidth: 1,
     borderColor: colors.line,
+  },
+  aboutLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 3,
+  },
+  aboutLinkIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.infoSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  aboutLinkText: {
+    flex: 1,
   },
   cardHeader: {
     flexDirection: 'row',

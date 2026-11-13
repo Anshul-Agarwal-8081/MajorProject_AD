@@ -26,11 +26,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { beaches } from '../data/beachList';
 import BeachCard from '../components/BeachCard';
 import DemoBanner from '../components/DemoBanner';
+import { useApp } from '../context/AppContext';
 
 export default function BeachesScreen({ navigation }) {
   // searchText is the current value of the search input
   // setSearchText updates it every time the user types a character
   const [searchText, setSearchText] = useState('');
+  const { isFavorite, toggleFavorite } = useApp();
 
   // ── Search / filter logic ───────────────────────────────
   // We filter the full beaches array based on what the user typed.
@@ -104,6 +106,8 @@ export default function BeachesScreen({ navigation }) {
           <BeachCard
             beach={item}
             onPress={() => navigation.navigate('BeachDetail', { beach: item })}
+            isFavorite={isFavorite(item.id)}
+            onFavoritePress={() => toggleFavorite(item.id)}
           />
         )}
         ListEmptyComponent={

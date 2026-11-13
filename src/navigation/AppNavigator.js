@@ -31,6 +31,8 @@ import BeachesScreen from '../screens/BeachesScreen';
 import AlertsScreen from '../screens/AlertsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import BeachDetailScreen from '../screens/BeachDetailScreen';
+import SavedScreen from '../screens/SavedScreen';
+import AboutScreen from '../screens/AboutScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -41,6 +43,7 @@ const TAB_ICONS = {
   Home:    { active: 'home',          inactive: 'home-outline' },
   Beaches: { active: 'water',         inactive: 'water-outline' },
   Alerts:  { active: 'notifications', inactive: 'notifications-outline' },
+  Saved:   { active: 'heart',         inactive: 'heart-outline' },
   Profile: { active: 'person',        inactive: 'person-outline' },
 };
 
@@ -80,6 +83,7 @@ function BottomTabs() {
       <Tab.Screen name="Home"    component={HomeScreen} />
       <Tab.Screen name="Beaches" component={BeachesScreen} />
       <Tab.Screen name="Alerts"  component={AlertsScreen} />
+      <Tab.Screen name="Saved"   component={SavedScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -99,6 +103,7 @@ export default function AppNavigator() {
           // Slide up from the bottom for a natural mobile feel
           options={{ animation: 'slide_from_bottom' }}
         />
+        <Stack.Screen name="About" component={AboutScreen} options={{ animation: 'slide_from_right' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

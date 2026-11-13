@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useApp } from '../context/AppContext';
 
 const statusLook = {
   Suitable: { text: '#15803d', bg: '#dcfce7' },
@@ -73,6 +74,7 @@ function StatusRow({ icon, label, status }) {
 export default function BeachDetailScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   const beach = route.params?.beach;
+  const { isFavorite, toggleFavorite } = useApp();
 
   if (!beach) {
     return (
@@ -103,6 +105,14 @@ export default function BeachDetailScreen({ navigation, route }) {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Ionicons name="arrow-back" size={22} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.saveBtn, { top: insets.top + 8 }]}
+            onPress={() => toggleFavorite(beach.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`${isFavorite(beach.id) ? 'Remove' : 'Save'} ${beach.name} ${isFavorite(beach.id) ? 'from' : 'to'} saved beaches`}
+          >
+            <Ionicons name={isFavorite(beach.id) ? 'heart' : 'heart-outline'} size={22} color={isFavorite(beach.id) ? '#fecaca' : '#fff'} />
           </TouchableOpacity>
         </View>
 
@@ -190,6 +200,13 @@ const styles = StyleSheet.create({
   backBtn: {
     position: 'absolute',
     left: 14,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  saveBtn: {
+    position: 'absolute',
+    right: 14,
     backgroundColor: 'rgba(0,0,0,0.45)',
     borderRadius: 20,
     padding: 8,
