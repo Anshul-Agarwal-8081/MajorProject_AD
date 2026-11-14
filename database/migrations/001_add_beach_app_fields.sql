@@ -1,0 +1,10 @@
+-- CoastSafe India
+-- Migration 001: Add fields required by the mobile app.
+
+ALTER TABLE beaches
+ADD COLUMN IF NOT EXISTS image_url TEXT,
+ADD COLUMN IF NOT EXISTS is_popular BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS swimming TEXT,
+ADD COLUMN IF NOT EXISTS surfing TEXT,
+ADD COLUMN IF NOT EXISTS boating TEXT,
+ADD COLUMN IF NOT EXISTS safety TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
