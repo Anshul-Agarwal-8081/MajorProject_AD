@@ -27,6 +27,9 @@ CREATE TABLE IF NOT EXISTS alerts (
   alert_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS beaches_name_state_idx
+  ON beaches (beach_name, state);
+
 CREATE INDEX IF NOT EXISTS alerts_beach_date_idx
   ON alerts (beach_id, alert_date DESC);
 
