@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { alerts } from '../data/alerts';
+import { alerts as demoAlerts } from '../data/alerts';
 import { manualPlaces } from '../data/places';
 import { seedNotifications } from '../data/notifications';
 import { defaultFavorites, defaultNotificationPrefs, defaultProfile } from '../data/userDefaults';
 import { readDeviceLocation } from '../services/locationService';
 import { presentLocalPreview } from '../services/notificationService';
+import { loadCoastData } from '../services/coastApi';
+import { normalizeBackendAlert } from '../utils/beachModel';
 
 const STORAGE_KEY = 'coastsafe.demo.v1';
 const AppContext = createContext(null);
@@ -28,6 +30,9 @@ const initialState = {
 export function AppProvider({ children }) {
   const [state, setState] = useState(initialState);
   const [hydrated, setHydrated] = useState(false);
+  const [coastData, setCoastData] = useState({
+    dataSource: 'loading', connected: false, remoteBeaches: null, remoteAssessments: [], remoteAlerts: [], remoteDemoAlerts: [], apiError: '',
+  });
 
   useEffect(() => {
     let active = true;
@@ -46,6 +51,21 @@ export function AppProvider({ children }) {
     return () => {
       active = false;
     };
+  }, []);
+
+  const refreshCoastData = useCallback(async () => {
+    setCoastData((current) => ({ ...current, dataSource: current.connected ? current.dataSource : 'loading' }));
+    const result = await loadCoastData();
+    setCoastData(result);
+    return result;
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    loadCoastData().then((result) => {
+      if (active) setCoastData(result);
+    });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -113,18 +133,29 @@ export function AppProvider({ children }) {
         read: false,
         alertId: null,
         beachId: null,
+        isDemo: true,
         ...entry,
       };
       setState((current) => ({ ...current, notifications: [item, ...current.notifications] }));
-      if (state.notificationPrefs.enabled && state.notificationPermission === 'granted') {
-        await presentLocalPreview({ title: item.title, body: item.body });
+      const preferenceKey = item.severity === 'info' ? 'information' : item.severity;
+      const categoryAllowed = !preferenceKey || state.notificationPrefs[preferenceKey] !== false;
+      if (state.notificationPrefs.enabled && categoryAllowed && state.notificationPermission === 'granted') {
+        await presentLocalPreview({ title: item.title, body: item.body, demo: item.isDemo });
       }
       return item;
     };
 
     return {
       ...state,
+      ...coastData,
       hydrated,
+      alerts: coastData.dataSource === 'api'
+        ? coastData.remoteAlerts.map((alert) => normalizeBackendAlert(alert, coastData.remoteBeaches || []))
+        : demoAlerts.map((alert) => ({ ...alert, isDemo: true, dataSource: 'demo' })),
+      demoAlertScenarios: coastData.dataSource === 'api'
+        ? (coastData.remoteDemoAlerts || []).map((alert) => normalizeBackendAlert(alert, coastData.remoteBeaches || []))
+        : [],
+      refreshCoastData,
       origin,
       locationLabel,
       toggleFavorite,
@@ -168,9 +199,14 @@ export function AppProvider({ children }) {
         setState({ ...initialState, onboardingComplete: true, permissionsSeen: true });
         await AsyncStorage.removeItem(STORAGE_KEY);
       },
-      nearbyAlertCount: (beachIds) => alerts.filter((alert) => alert.beachIds.some((id) => beachIds.includes(id))).length,
+      nearbyAlertCount: (beachIds) => {
+        const alerts = coastData.dataSource === 'api'
+          ? coastData.remoteAlerts.map((alert) => normalizeBackendAlert(alert, coastData.remoteBeaches || []))
+          : demoAlerts;
+        return alerts.filter((alert) => alert.beachIds?.some((id) => beachIds.includes(id))).length;
+      },
     };
-  }, [state, hydrated, origin, locationLabel, update]);
+  }, [state, coastData, hydrated, origin, locationLabel, update, refreshCoastData]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

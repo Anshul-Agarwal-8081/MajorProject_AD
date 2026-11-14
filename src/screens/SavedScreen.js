@@ -1,26 +1,18 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import BeachCard from '../components/BeachCard';
 import { useApp } from '../context/AppContext';
-import { getBeaches, getSavedBeaches } from '../services/beachService';
+import { useCatalogue } from '../hooks/useCatalogue';
 
 export default function SavedScreen({ navigation }) {
   const { favorites, isFavorite, toggleFavorite } = useApp();
-  const [beaches, setBeaches] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
-  useEffect(() => {
-    let active = true;
-    getBeaches().then(({ beaches: items }) => { if (active) setBeaches(items); })
-      .catch(() => { if (active) setLoadError('Saved beaches could not be loaded. Please try again.'); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, []);
+  const { catalogue } = useCatalogue();
+  const savedIds = useMemo(() => new Set(favorites.map(String)), [favorites]);
   const savedBeaches = useMemo(
-    () => getSavedBeaches(beaches, favorites),
-    [beaches, favorites],
+    () => catalogue.filter((beach) => savedIds.has(String(beach.id))),
+    [catalogue, savedIds],
   );
 
   return (
@@ -43,11 +35,7 @@ export default function SavedScreen({ navigation }) {
         )}
         contentContainerStyle={savedBeaches.length ? styles.listContent : styles.emptyList}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={loading ? (
-          <View style={styles.emptyState}><Text style={styles.emptyTitle}>Loading saved beaches…</Text></View>
-        ) : loadError ? (
-          <View style={styles.emptyState}><Text style={styles.emptyText}>{loadError}</Text></View>
-        ) : (
+        ListEmptyComponent={(
           <View style={styles.emptyState}>
             <View style={styles.emptyIcon}>
               <Ionicons name="heart-outline" size={30} color="#0B3A5B" />

@@ -7,11 +7,11 @@
 //   - We use JavaScript's .filter() + .includes() to find matches
 //   - Every keystroke re-runs the filter — React re-renders the list
 //
-// All data comes from src/data/beachList.js (local, no API).
+// The shared catalogue switches between the API and local demo records.
 // Tap a beach card to open its detail screen.
 // ---------------------------------------------------------
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -24,37 +24,23 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-import { getBeaches, searchBeaches } from '../services/beachService';
 import BeachCard from '../components/BeachCard';
 import DemoBanner from '../components/DemoBanner';
 import { useApp } from '../context/AppContext';
+import { useCatalogue } from '../hooks/useCatalogue';
 
 export default function BeachesScreen({ navigation }) {
   // searchText is the current value of the search input
   // setSearchText updates it every time the user types a character
   const [searchText, setSearchText] = useState('');
-  const [beaches, setBeaches] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
-  const { isFavorite, toggleFavorite } = useApp();
-
-  useEffect(() => {
-    let active = true;
-    getBeaches().then(({ beaches: items }) => {
-      if (active) setBeaches(items);
-    }).catch(() => {
-      if (active) setLoadError('Beaches could not be loaded. Please try again.');
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
-    return () => { active = false; };
-  }, []);
+  const { isFavorite, toggleFavorite, dataSource: connectionSource } = useApp();
+  const { catalogue } = useCatalogue({ query: searchText, state: 'All', activity: 'all', suitability: 'all', sort: 'name' });
 
   // ── Search / filter logic ───────────────────────────────
   // We filter the full beaches array based on what the user typed.
   // .toLowerCase() makes the search case-insensitive.
   // We check if the beach NAME or STATE contains the search query.
-  const filteredBeaches = searchBeaches(beaches, searchText);
+  const filteredBeaches = catalogue;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -64,7 +50,7 @@ export default function BeachesScreen({ navigation }) {
       <View style={styles.header}>
         <Text style={styles.heading}>Indian Beaches</Text>
         <Text style={styles.subheading}>
-          {beaches.length} beaches {beaches.length ? 'available' : 'in the demo dataset'}
+          {filteredBeaches.length} beaches {connectionSource === 'api' ? 'from the database' : 'in the local demo dataset'}
         </Text>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.headerAction} onPress={() => navigation.navigate('Explore')}>
@@ -127,11 +113,7 @@ export default function BeachesScreen({ navigation }) {
             onFavoritePress={() => toggleFavorite(item.id)}
           />
         )}
-        ListEmptyComponent={loading ? (
-          <View style={styles.emptyBox}><Text style={styles.emptyText}>Loading beaches…</Text></View>
-        ) : loadError ? (
-          <View style={styles.emptyBox}><Text style={styles.emptyText}>{loadError}</Text></View>
-        ) : (
+        ListEmptyComponent={(
           <View style={styles.emptyBox}>
             <Ionicons name="search-outline" size={44} color="#cbd5e1" />
             <Text style={styles.emptyText}>

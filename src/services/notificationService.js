@@ -59,7 +59,7 @@ export async function requestNotificationPermission() {
   }
 }
 
-export async function presentLocalPreview({ title, body }) {
+export async function presentLocalPreview({ title, body, demo = true }) {
   if (Platform.OS === 'web') return { presented: false };
   try {
     const Notifications = await import('expo-notifications');
@@ -67,7 +67,7 @@ export async function presentLocalPreview({ title, body }) {
       content: {
         title,
         body,
-        data: { demo: true },
+        data: { demo: Boolean(demo) },
       },
       trigger: null,
     });

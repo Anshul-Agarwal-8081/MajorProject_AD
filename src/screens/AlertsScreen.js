@@ -11,9 +11,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, shadow } from '../theme';
-import { alerts, filterAlerts } from '../data/alerts';
+import { filterAlerts } from '../data/alerts';
 import AlertCard from '../components/AlertCard';
 import { useApp } from '../context/AppContext';
+import { formatDateTime } from '../utils/geo';
 
 const SEVERITY_FILTERS = [
   { id: 'all', label: 'All Bulletins' },
@@ -26,11 +27,11 @@ export default function AlertsScreen() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedAlertModal, setSelectedAlertModal] = useState(null);
   const [savedAlertIds, setSavedAlertIds] = useState([]);
-  const { addNotification } = useApp();
+  const { addNotification, alerts, demoAlertScenarios, dataSource } = useApp();
 
   const filteredAlerts = useMemo(() => {
     return filterAlerts(alerts, activeFilter);
-  }, [activeFilter]);
+  }, [activeFilter, alerts]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -50,7 +51,7 @@ export default function AlertsScreen() {
           </View>
 
           <View style={styles.alertCounterBadge}>
-            <Text style={styles.alertCounterText}>{alerts.length}</Text>
+              <Text style={styles.alertCounterText}>{alerts.length}</Text>
           </View>
         </View>
 
@@ -58,9 +59,11 @@ export default function AlertsScreen() {
         <View style={styles.demoWarningBanner}>
           <Ionicons name="shield-alert-outline" size={20} color={colors.caution} style={{ marginTop: 1 }} />
           <View style={styles.demoWarningTextWrap}>
-            <Text style={styles.demoWarningTitle}>ACADEMIC PROTOTYPE WARNING</Text>
+            <Text style={styles.demoWarningTitle}>{dataSource === 'api' ? 'DATABASE ALERT FEED' : 'ACADEMIC DEMO ALERTS'}</Text>
             <Text style={styles.demoWarningBody}>
-              All bulletins listed below are simulated demonstration data for university evaluation. They do not constitute official emergency announcements.
+              {dataSource === 'api'
+                ? 'Only active verified database records are listed. CoastSafe is not an emergency service; follow current official advisories and local lifeguards.'
+                : 'These bulletins are local simulated data for university evaluation. They are not official emergency announcements.'}
             </Text>
           </View>
         </View>
@@ -97,10 +100,12 @@ export default function AlertsScreen() {
       >
         <View style={styles.statusSummaryRow}>
           <Text style={styles.activeAdvisoriesCount}>
-            {filteredAlerts.length} sample {filteredAlerts.length === 1 ? 'bulletin' : 'bulletins'}
+            {filteredAlerts.length} {dataSource === 'api' ? 'verified' : 'demo'} {filteredAlerts.length === 1 ? 'bulletin' : 'bulletins'}
           </Text>
-          <Text style={styles.sourceLabel}>Simulated sample feed</Text>
+          <Text style={styles.sourceLabel}>{dataSource === 'api' ? 'CoastSafe database' : 'Local demo feed'}</Text>
         </View>
+
+        {!filteredAlerts.length ? <Text style={styles.emptyAlerts}>{dataSource === 'api' ? 'No current verified alerts are available.' : 'No demo alerts match this filter.'}</Text> : null}
 
         {filteredAlerts.map((alert) => (
           <AlertCard
@@ -109,6 +114,18 @@ export default function AlertsScreen() {
             onPress={() => setSelectedAlertModal(alert)}
           />
         ))}
+
+        {dataSource === 'api' ? (
+          <View style={styles.demoScenarioSection}>
+            <Text style={styles.demoScenarioTitle}>Demo scenarios · not active warnings</Text>
+            <Text style={styles.demoScenarioNote}>These seeded examples are unverified academic scenarios, shown separately from the active alert feed.</Text>
+            {demoAlertScenarios.length
+              ? demoAlertScenarios.map((alert) => (
+                <AlertCard key={`demo-${alert.id}`} alert={alert} onPress={() => setSelectedAlertModal(alert)} />
+              ))
+              : <Text style={styles.emptyAlerts}>No database demo scenarios are available.</Text>}
+          </View>
+        ) : null}
 
         <View style={styles.emergencyContactsCard}>
           <View style={styles.emergencyHeader}>
@@ -182,18 +199,18 @@ export default function AlertsScreen() {
                     </Text>
                   </View>
                   <View style={styles.modalMetaItem}>
-                    <Text style={styles.modalMetaLabel}>Demo Status</Text>
-                    <Text style={styles.modalMetaVal}>Simulated</Text>
+                    <Text style={styles.modalMetaLabel}>Record Status</Text>
+                    <Text style={styles.modalMetaVal}>{selectedAlertModal.isDemo ? 'Demo' : 'Database verified'}</Text>
                   </View>
                   <View style={styles.modalMetaItem}>
                     <Text style={styles.modalMetaLabel}>Issued</Text>
-                    <Text style={styles.modalMetaVal}>{selectedAlertModal.issuedAt || 'Sample record'}</Text>
+                  <Text style={styles.modalMetaVal}>{selectedAlertModal.issuedAt ? formatDateTime(selectedAlertModal.issuedAt) : 'Not provided'}</Text>
                   </View>
                 </View>
 
                 <Text style={styles.modalSourceText}>Type: {(selectedAlertModal.category || 'general').replace(/_/g, ' ')} · Expires: {selectedAlertModal.expiresAt || 'Not specified'}</Text>
 
-                <Text style={styles.modalSectionHeading}>Sample Advisory Summary</Text>
+                <Text style={styles.modalSectionHeading}>{selectedAlertModal.isDemo ? 'Demo Advisory Summary' : 'Alert Details'}</Text>
                 <Text style={styles.modalDescriptionText}>
                   {selectedAlertModal.description}
                 </Text>
@@ -213,24 +230,24 @@ export default function AlertsScreen() {
                   </Text>
                 </View>
 
-                <View style={styles.modalDemoWarning}>
+                {selectedAlertModal.isDemo ? <View style={styles.modalDemoWarning}>
                   <Text style={styles.modalDemoWarningText}>
                     ⚠️ DEMONSTRATION PROTOTYPE: This advisory is simulated for academic research demonstration.
                   </Text>
-                </View>
+                </View> : <View style={styles.modalDemoWarning}><Text style={styles.modalDemoWarningText}>This record is marked verified in the CoastSafe database. Confirm current guidance with local authorities.</Text></View>}
               </ScrollView>
 
               <TouchableOpacity
                 style={styles.modalNotificationBtn}
                 onPress={() => {
                   if (!savedAlertIds.includes(selectedAlertModal.id)) {
-                    addNotification({ title: `Sample alert: ${selectedAlertModal.title}`, body: selectedAlertModal.description, category: selectedAlertModal.category, source: selectedAlertModal.source });
+                    addNotification({ title: `${selectedAlertModal.isDemo ? 'Demo alert' : 'Saved alert'}: ${selectedAlertModal.title}`, body: selectedAlertModal.description, category: selectedAlertModal.category, severity: selectedAlertModal.severity, source: selectedAlertModal.source, alertId: selectedAlertModal.id, beachId: selectedAlertModal.beachIds?.[0] || null, isDemo: Boolean(selectedAlertModal.isDemo) });
                     setSavedAlertIds((current) => [...current, selectedAlertModal.id]);
                   }
                 }}
                 accessibilityRole="button"
               >
-                <Text style={styles.modalNotificationText}>{savedAlertIds.includes(selectedAlertModal.id) ? 'Added to in-app notifications' : 'Add sample to notifications'}</Text>
+                <Text style={styles.modalNotificationText}>{savedAlertIds.includes(selectedAlertModal.id) ? 'Added to in-app notifications' : selectedAlertModal.isDemo ? 'Save demo alert to notifications' : 'Save alert to notifications'}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalDismissBtn}
@@ -360,6 +377,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.ink,
   },
+  emptyAlerts: { color: colors.muted, backgroundColor: colors.white, borderRadius: 12, padding: 16, marginBottom: 12, lineHeight: 20 },
+  demoScenarioSection: { marginTop: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.line },
+  demoScenarioTitle: { color: colors.ink, fontSize: 15, fontWeight: '800', marginBottom: 5 },
+  demoScenarioNote: { color: colors.muted, fontSize: 12, lineHeight: 18, marginBottom: 10 },
   sourceLabel: {
     fontSize: 11,
     color: colors.muted,

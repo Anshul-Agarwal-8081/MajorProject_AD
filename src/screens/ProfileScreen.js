@@ -7,7 +7,6 @@ import {
   Switch,
   StyleSheet,
   StatusBar,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,13 +31,6 @@ export default function ProfileScreen({ navigation }) {
     markNotificationRead,
     markAllNotificationsRead,
   } = useApp();
-
-  const handleSimulatedAction = (featureName) => {
-    Alert.alert(
-      'Phase 1 Prototype Feature',
-      `${featureName} is an active UI prototype setting in Phase 1. Backend database synchronisation and remote push services will be implemented in Phase 2.`
-    );
-  };
 
   const selectedActivities = profile?.activities || ['swimming', 'boating'];
 
@@ -68,7 +60,7 @@ export default function ProfileScreen({ navigation }) {
 
           <View style={styles.phaseBadge}>
             <Ionicons name="flask-outline" size={12} color={colors.turquoiseSoft} />
-            <Text style={styles.phaseBadgeText}>Phase 1 UI Prototype Mode (No Auth Required)</Text>
+            <Text style={styles.phaseBadgeText}>Guest profile · saved on this device</Text>
           </View>
         </LinearGradient>
 
@@ -119,29 +111,26 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Section: Notification Preferences (UI Only) */}
+          {/* Preferences are stored locally; push delivery is not connected. */}
           <View style={styles.cardSection}>
             <View style={styles.cardHeader}>
               <Ionicons name="notifications-outline" size={20} color={colors.ocean} />
               <View>
                 <Text style={styles.cardTitle}>Notification Preferences</Text>
                 <Text style={styles.cardSubtitle}>
-                  Simulated toggles for future push notifications
+                  Saved on this device. Automatic remote alert delivery is not connected.
                 </Text>
               </View>
             </View>
 
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
-                <Text style={styles.toggleLabel}>High Wave & Surf Bulletins</Text>
-                <Text style={styles.toggleDesc}>Alert when breaking swell exceeds 2.0 metres</Text>
+                <Text style={styles.toggleLabel}>Local notification previews</Text>
+                <Text style={styles.toggleDesc}>Show a preview when you save an alert on this device</Text>
               </View>
               <Switch
-                value={notificationPrefs?.highWaves !== false}
-                onValueChange={(val) => {
-                  setNotificationPref('highWaves', val);
-                  handleSimulatedAction('Wave Alerts');
-                }}
+                value={notificationPrefs?.enabled !== false}
+                onValueChange={(val) => setNotificationPref('enabled', val)}
                 trackColor={{ false: colors.line, true: colors.teal }}
                 thumbColor={colors.white}
               />
@@ -149,15 +138,12 @@ export default function ProfileScreen({ navigation }) {
 
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
-                <Text style={styles.toggleLabel}>Rip Current Hazard Warnings</Text>
-                <Text style={styles.toggleDesc}>Alert for dangerous seaward nearshore channels</Text>
+                <Text style={styles.toggleLabel}>Critical alerts</Text>
+                <Text style={styles.toggleDesc}>Allow saved critical alerts in local notification previews</Text>
               </View>
               <Switch
-                value={notificationPrefs?.ripCurrents !== false}
-                onValueChange={(val) => {
-                  setNotificationPref('ripCurrents', val);
-                  handleSimulatedAction('Rip Current Warnings');
-                }}
+                value={notificationPrefs?.critical !== false}
+                onValueChange={(val) => setNotificationPref('critical', val)}
                 trackColor={{ false: colors.line, true: colors.teal }}
                 thumbColor={colors.white}
               />
@@ -165,15 +151,25 @@ export default function ProfileScreen({ navigation }) {
 
             <View style={styles.toggleRow}>
               <View style={styles.toggleTextWrap}>
-                <Text style={styles.toggleLabel}>Adverse Weather & Wind Shifts</Text>
-                <Text style={styles.toggleDesc}>Notices for gale warnings and storm surges</Text>
+                <Text style={styles.toggleLabel}>Warnings</Text>
+                <Text style={styles.toggleDesc}>Allow saved warning alerts in local notification previews</Text>
               </View>
               <Switch
-                value={notificationPrefs?.severeWeather !== false}
-                onValueChange={(val) => {
-                  setNotificationPref('severeWeather', val);
-                  handleSimulatedAction('Weather Bulletins');
-                }}
+                value={notificationPrefs?.warning !== false}
+                onValueChange={(val) => setNotificationPref('warning', val)}
+                trackColor={{ false: colors.line, true: colors.teal }}
+                thumbColor={colors.white}
+              />
+            </View>
+
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleTextWrap}>
+                <Text style={styles.toggleLabel}>Information notes</Text>
+                <Text style={styles.toggleDesc}>Allow saved information alerts in local notification previews</Text>
+              </View>
+              <Switch
+                value={notificationPrefs?.information === true}
+                onValueChange={(val) => setNotificationPref('information', val)}
                 trackColor={{ false: colors.line, true: colors.teal }}
                 thumbColor={colors.white}
               />
@@ -182,14 +178,14 @@ export default function ProfileScreen({ navigation }) {
 
           <View style={styles.cardSection}>
             <View style={styles.notificationHeader}>
-              <View><Text style={styles.cardTitle}>In-app notifications</Text><Text style={styles.cardSubtitle}>Sample items saved on this device</Text></View>
+              <View><Text style={styles.cardTitle}>In-app notifications</Text><Text style={styles.cardSubtitle}>Items saved on this device</Text></View>
               <TouchableOpacity onPress={markAllNotificationsRead} accessibilityRole="button"><Text style={styles.markRead}>Mark all read</Text></TouchableOpacity>
             </View>
             {(notifications || []).slice(0, 6).map((item) => (
               <TouchableOpacity key={item.id} style={[styles.notificationEntry, !item.read && styles.notificationUnread]} onPress={() => markNotificationRead(item.id)} accessibilityRole="button">
                 <Ionicons name="notifications-outline" size={17} color={colors.teal} />
                 <View style={{ flex: 1 }}><Text style={styles.notificationTitle}>{item.title}</Text><Text style={styles.notificationBody} numberOfLines={2}>{item.body}</Text></View>
-                <Text style={styles.notificationDemo}>DEMO</Text>
+                <Text style={styles.notificationDemo}>{item.isDemo === false ? 'DB' : 'DEMO'}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -220,7 +216,7 @@ export default function ProfileScreen({ navigation }) {
               <Text style={styles.disclaimerTitle}>Academic Safety Disclaimer</Text>
             </View>
             <Text style={styles.disclaimerText}>
-              This application is an educational prototype. All conditions, weather values, and suitability results presented in Phase 1 are simulated demonstration data.
+              This application is an educational prototype. With a connected server, it shows verified database assessments and separately labelled model forecasts. Demo or offline mode uses clearly labelled sample conditions and alerts.
               {'\n\n'}
               Always obey official advisories from the National Disaster Management Authority (NDMA), Indian Coast Guard, and local lifeguard patrols.
             </Text>

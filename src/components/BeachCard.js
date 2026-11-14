@@ -16,9 +16,12 @@ const statusLook = {
 
 export default function BeachCard({ beach, onPress, isFavorite = false, onFavoritePress, preferredActivity = 'swimming' }) {
   const rawStatus = beach.assessment?.[preferredActivity]?.status || beach[preferredActivity] || beach.swimming;
-  const statusLabels = { suitable: 'Suitable', caution: 'Caution', notSuitable: 'Not Suitable', insufficient: 'Insufficient Data', insufficient_data: 'Insufficient Data' };
+  const statusLabels = { suitable: 'Suitable', caution: 'Caution', notSuitable: 'Not Suitable', not_suitable: 'Not Suitable', insufficient: 'Insufficient Data', insufficient_data: 'Insufficient Data' };
   const shownStatus = statusLabels[rawStatus] || rawStatus || 'Insufficient Data';
   const look = statusLook[shownStatus] || { color: '#6b7280', bg: '#f3f4f6' };
+  const sourceLabel = beach.dataSource === 'api'
+    ? (shownStatus === 'Insufficient Data' ? 'no verified result' : 'verified record')
+    : 'demo';
 
   return (
     <View style={styles.card}>
@@ -34,7 +37,7 @@ export default function BeachCard({ beach, onPress, isFavorite = false, onFavori
 
           <View style={[styles.badge, { backgroundColor: look.bg }]}>
             <Text style={[styles.badgeText, { color: look.color }]} numberOfLines={2}>
-              {preferredActivity[0].toUpperCase() + preferredActivity.slice(1)}: {shownStatus} (demo)
+              {preferredActivity[0].toUpperCase() + preferredActivity.slice(1)}: {shownStatus} · {sourceLabel}
             </Text>
           </View>
         </View>

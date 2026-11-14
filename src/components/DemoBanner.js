@@ -8,16 +8,33 @@
 // ---------------------------------------------------------
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useApp } from '../context/AppContext';
 
 export default function DemoBanner() {
+  const { dataSource, apiError, refreshCoastData } = useApp();
+  const isConnected = dataSource === 'api';
+  const isLoading = dataSource === 'loading';
+
   return (
     <View style={styles.banner}>
       <Ionicons name="information-circle-outline" size={16} color="#92400e" />
-      <Text style={styles.text}>
-        {' '}Sample data only — not real-time safety advice
-      </Text>
+      <View style={styles.copy}>
+        <Text style={styles.text}>
+          {isLoading
+            ? 'Connecting to CoastSafe. Local demo data is shown until the server responds.'
+            : isConnected
+              ? 'Beach directory is connected. Safety results appear only when verified; forecasts are labelled separately.'
+              : 'DEMO MODE — sample beaches, conditions and alerts are not real-time safety advice.'}
+        </Text>
+        {apiError ? <Text style={styles.detail}>{apiError}</Text> : null}
+        {!isConnected && !isLoading ? (
+          <TouchableOpacity onPress={refreshCoastData} accessibilityRole="button">
+            <Text style={styles.retry}>Retry server connection</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -25,7 +42,7 @@ export default function DemoBanner() {
 const styles = StyleSheet.create({
   banner: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: '#fef3c7',   // light yellow
     borderColor: '#fcd34d',       // golden border
     borderWidth: 1,
@@ -40,5 +57,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     flex: 1,
   },
+  copy: { flex: 1 },
+  detail: { color: '#92400e', fontSize: 11, lineHeight: 15, marginTop: 3 },
+  retry: { color: '#0B3A5B', fontSize: 12, fontWeight: '700', marginTop: 6 },
 });
 

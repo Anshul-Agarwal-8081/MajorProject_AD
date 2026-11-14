@@ -11,7 +11,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { getBeachById } from '../services/beachService';
+import { getBeachEnvironmentalInfo } from '../services/coastApi';
 import { useCatalogue } from '../hooks/useCatalogue';
 
 const statusLook = {
@@ -88,37 +88,37 @@ export default function BeachDetailScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   const routeBeach = route.params?.beach;
   const beachId = route.params?.beachId ?? routeBeach?.id;
-  const [beach, setBeach] = useState(routeBeach || null);
-  const [loading, setLoading] = useState(Boolean(beachId && !routeBeach));
-  const [loadError, setLoadError] = useState(false);
-  const { isFavorite, toggleFavorite } = useApp();
+  const [imageBroken, setImageBroken] = useState(false);
+  const [environmentResult, setEnvironmentResult] = useState(null);
+  const { isFavorite, toggleFavorite, dataSource } = useApp();
   const { catalogue } = useCatalogue();
+  const catalogueBeach = catalogue.find((item) => item.id === beachId || String(item.serverId) === String(beachId) || item.name === routeBeach?.name);
+  const displayBeach = dataSource === 'api' ? catalogueBeach : catalogueBeach || routeBeach;
+  const loading = dataSource === 'loading' && !routeBeach && !catalogueBeach;
+  const serverBeachId = dataSource === 'api' ? catalogueBeach?.serverId : null;
+  const environmentInfo = environmentResult?.serverBeachId === serverBeachId ? environmentResult.value : null;
+  const environmentLoading = Boolean(serverBeachId && !environmentInfo);
 
   useEffect(() => {
     let active = true;
-    if (!beachId) return undefined;
-    getBeachById(beachId, routeBeach).then(({ beach: item }) => {
-      if (active) {
-        setBeach(item || null);
-        setLoadError(false);
-      }
-    }).catch(() => {
-      if (active) setLoadError(true);
-    }).finally(() => {
-      if (active) setLoading(false);
+    if (!serverBeachId) return undefined;
+    getBeachEnvironmentalInfo(serverBeachId).then((result) => {
+      if (active) setEnvironmentResult({ serverBeachId, value: result });
+    }).catch((error) => {
+      if (active) setEnvironmentResult({ serverBeachId, value: { dataStatus: 'unavailable', observations: [], forecast: null, message: error.message } });
     });
     return () => { active = false; };
-  }, [beachId, routeBeach]);
+  }, [serverBeachId]);
 
-  if (loading && !beach) {
+  if (loading && !displayBeach) {
     return <SafeAreaView style={styles.container}><View style={styles.missing}><Text style={styles.missingTitle}>Loading beach details…</Text></View></SafeAreaView>;
   }
 
-  if (!beach) {
+  if (!displayBeach) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.missing}>
-          <Text style={styles.missingTitle}>{loadError ? 'Beach details could not be loaded' : 'Beach not found'}</Text>
+          <Text style={styles.missingTitle}>Beach not found</Text>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.missingLink}>Go back</Text>
           </TouchableOpacity>
@@ -127,9 +127,8 @@ export default function BeachDetailScreen({ navigation, route }) {
     );
   }
 
-  const modelBeach = catalogue.find((item) => item.name === beach.name);
-  const facilities = beach.facilities?.length ? beach.facilities : modelBeach?.facilities || [];
-  const safetyNotes = beach.safety?.length ? beach.safety : beach.safetyNotes?.length ? beach.safetyNotes : modelBeach?.safety || [];
+  const facilities = displayBeach.facilities || [];
+  const safetyNotes = dataSource === 'api' ? [] : displayBeach.safety?.length ? displayBeach.safety : displayBeach.safetyNotes || [];
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -137,7 +136,7 @@ export default function BeachDetailScreen({ navigation, route }) {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View>
-          {beach.image ? <Image source={{ uri: beach.image }} style={styles.hero} onError={() => setBeach((current) => current ? { ...current, image: null } : current)} /> : <View style={[styles.hero, styles.heroFallback]}><Ionicons name="image-outline" size={40} color="#64748b" /></View>}
+          {displayBeach.image && !imageBroken ? <Image source={{ uri: displayBeach.image }} style={styles.hero} onError={() => setImageBroken(true)} /> : <View style={[styles.hero, styles.heroFallback]}><Ionicons name="image-outline" size={40} color="#64748b" /></View>}
           <TouchableOpacity
             style={[styles.backBtn, { top: insets.top + 8 }]}
             onPress={() => navigation.goBack()}
@@ -147,26 +146,26 @@ export default function BeachDetailScreen({ navigation, route }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.saveBtn, { top: insets.top + 8 }]}
-            onPress={() => toggleFavorite(beach.id)}
+            onPress={() => toggleFavorite(displayBeach.id)}
             accessibilityRole="button"
-            accessibilityLabel={`${isFavorite(beach.id) ? 'Remove' : 'Save'} ${beach.name} ${isFavorite(beach.id) ? 'from' : 'to'} saved beaches`}
+            accessibilityLabel={`${isFavorite(displayBeach.id) ? 'Remove' : 'Save'} ${displayBeach.name} ${isFavorite(displayBeach.id) ? 'from' : 'to'} saved beaches`}
           >
-            <Ionicons name={isFavorite(beach.id) ? 'heart' : 'heart-outline'} size={22} color={isFavorite(beach.id) ? '#fecaca' : '#fff'} />
+            <Ionicons name={isFavorite(displayBeach.id) ? 'heart' : 'heart-outline'} size={22} color={isFavorite(displayBeach.id) ? '#fecaca' : '#fff'} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.body}>
-          <Text style={styles.name}>{beach.name}</Text>
+          <Text style={styles.name}>{displayBeach.name}</Text>
           <View style={styles.stateRow}>
             <Ionicons name="location-outline" size={15} color="#64748b" />
-            <Text style={styles.state}>{beach.state}</Text>
+            <Text style={styles.state}>{displayBeach.city ? `${displayBeach.city}, ` : ''}{displayBeach.state}</Text>
           </View>
 
           <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.description}>{beach.description}</Text>
+          <Text style={styles.description}>{displayBeach.description}</Text>
 
           <Text style={styles.sectionTitle}>Facilities</Text>
-          <Text style={styles.sectionHint}>From the sample record for this beach.</Text>
+          <Text style={styles.sectionHint}>{dataSource === 'api' ? 'Facilities listed in the CoastSafe database.' : 'Demo catalogue information.'}</Text>
           {facilities.length === 0 ? (
             <Text style={styles.emptyLine}>Nothing listed for this beach.</Text>
           ) : (
@@ -184,7 +183,7 @@ export default function BeachDetailScreen({ navigation, route }) {
             </View>
           )}
 
-          <Text style={styles.sectionTitle}>Safety information</Text>
+          {safetyNotes.length ? <Text style={styles.sectionTitle}>Safety information (demo)</Text> : null}
           {safetyNotes.map((note) => (
             <View key={note} style={styles.noteRow}>
               <View style={styles.noteDot} />
@@ -192,13 +191,13 @@ export default function BeachDetailScreen({ navigation, route }) {
             </View>
           ))}
 
-          <Text style={styles.sectionTitle}>Sample suitability</Text>
+          <Text style={styles.sectionTitle}>{dataSource === 'api' ? 'Activity suitability' : 'Sample suitability'}</Text>
           <View style={styles.demoBox}>
             <Ionicons name="information-circle-outline" size={18} color="#92400e" />
             <Text style={styles.demoText}>
-              Suitable, Caution and Not Suitable are demonstration data for this
-              college prototype. They are not a real-time safety assessment, and
-              they should not be used to decide whether the water is safe.
+              {dataSource === 'api'
+                ? 'Only current verified assessments are shown. Missing or expired assessments appear as Insufficient Data. Follow local lifeguards and official advisories.'
+                : 'Suitable, Caution and Not Suitable are demonstration data. They are not real-time safety advice and should not be used to decide whether the water is safe.'}
             </Text>
           </View>
 
@@ -208,11 +207,43 @@ export default function BeachDetailScreen({ navigation, route }) {
                 key={activity.key}
                 icon={activity.icon}
                 label={activity.label}
-                status={beach.assessment?.[activity.key]?.status || modelBeach?.assessment?.[activity.key]?.status || beach[activity.key]}
-                reason={beach.assessment?.[activity.key]?.explanation || modelBeach?.assessment?.[activity.key]?.explanation}
+                status={displayBeach.assessment?.[activity.key]?.status || displayBeach[activity.key] || 'insufficient'}
+                reason={displayBeach.assessment?.[activity.key]?.explanation || 'No current verified assessment is available.'}
               />
             ))}
           </View>
+
+          <Text style={styles.sectionTitle}>Environmental information</Text>
+          {dataSource === 'api' ? (
+            <View style={styles.environmentCard}>
+              {environmentLoading ? <Text style={styles.environmentText}>Loading verified readings…</Text> : null}
+              {!environmentLoading && environmentInfo?.observations?.length ? environmentInfo.observations.map((item) => (
+                <View key={item.observation_id} style={styles.environmentRow}>
+                  <Text style={styles.environmentText}>{item.measurement}: {item.value} {item.unit}</Text>
+                  <Text style={styles.environmentMeta}>{item.source} · {item.recorded_at}</Text>
+                </View>
+              )) : null}
+              {!environmentLoading && !environmentInfo?.observations?.length ? (
+                <Text style={styles.environmentText}>{environmentInfo?.message || 'No current verified environmental readings are available (Insufficient Data).'}</Text>
+              ) : null}
+              {environmentInfo?.forecast ? (
+                <View style={styles.forecastBox}>
+                  <Text style={styles.environmentHeading}>Open-Meteo model forecast · unverified</Text>
+                  <Text style={styles.environmentText}>Wave height: {environmentInfo.forecast.current.waveHeight ?? 'Unavailable'} {environmentInfo.forecast.units.waveHeight || ''}</Text>
+                  <Text style={styles.environmentText}>Wave period: {environmentInfo.forecast.current.wavePeriod ?? 'Unavailable'} {environmentInfo.forecast.units.wavePeriod || ''}</Text>
+                  <Text style={styles.environmentText}>Ocean current: {environmentInfo.forecast.current.oceanCurrentVelocity ?? 'Unavailable'} {environmentInfo.forecast.units.oceanCurrentVelocity || ''}</Text>
+                  <Text style={styles.environmentMeta}>{environmentInfo.forecast.disclaimer}</Text>
+                </View>
+              ) : environmentInfo?.forecastMessage ? <Text style={styles.environmentMeta}>Model forecast unavailable: {environmentInfo.forecastMessage}</Text> : null}
+            </View>
+          ) : (
+            <View style={styles.environmentCard}>
+              <Text style={styles.environmentHeading}>DEMO CONDITIONS · NOT LIVE</Text>
+              <Text style={styles.environmentText}>Wave height: {displayBeach.conditions?.waveHeightM ?? 'Not available'}{displayBeach.conditions?.waveHeightM != null ? ' m' : ''}</Text>
+              <Text style={styles.environmentText}>Wind speed: {displayBeach.conditions?.windSpeedKmh ?? 'Not available'}{displayBeach.conditions?.windSpeedKmh != null ? ' km/h' : ''}</Text>
+              <Text style={styles.environmentMeta}>These local values are sample data and are not used when the API is connected.</Text>
+            </View>
+          )}
 
           <Text style={styles.sectionTitle}>Tips for visitors</Text>
           {visitorTips.map((tip) => (
@@ -367,6 +398,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
+  environmentCard: { backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 18, borderWidth: 1, borderColor: '#e2e8f0' },
+  environmentRow: { paddingBottom: 9, marginBottom: 9, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  environmentHeading: { color: '#0B3A5B', fontSize: 13, fontWeight: '800', marginBottom: 6 },
+  environmentText: { color: '#334155', fontSize: 13, lineHeight: 19 },
+  environmentMeta: { color: '#64748b', fontSize: 11, lineHeight: 16, marginTop: 3 },
+  forecastBox: { backgroundColor: '#eef8fa', borderRadius: 10, padding: 11, marginTop: 12 },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',

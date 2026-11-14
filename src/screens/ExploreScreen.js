@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme';
 import { useCatalogue } from '../hooks/useCatalogue';
+import { useApp } from '../context/AppContext';
 import BeachCard from '../components/BeachCard';
 import SearchBar from '../components/SearchBar';
 
@@ -38,6 +39,7 @@ const SORT_OPTIONS = [
 ];
 
 export default function ExploreScreen({ route, navigation }) {
+  const { dataSource } = useApp();
   const initialSearch = route.params?.initialSearch || '';
   const initialActivity = route.params?.initialActivity || 'all';
   const initialSuitability = route.params?.initialSuitability || 'all';
@@ -57,6 +59,7 @@ export default function ExploreScreen({ route, navigation }) {
     sort: selectedSort,
   });
   const statesList = ['All', ...new Set(catalogue.map((beach) => beach.state).filter(Boolean).sort((a, b) => a.localeCompare(b)))];
+  const sortOptions = dataSource === 'api' ? SORT_OPTIONS.filter((option) => option.id !== 'waves') : SORT_OPTIONS;
 
   const resetFilters = () => {
     setQuery('');
@@ -195,7 +198,7 @@ export default function ExploreScreen({ route, navigation }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalPills}
           >
-            {SORT_OPTIONS.map((opt) => {
+            {sortOptions.map((opt) => {
               const isSelected = selectedSort === opt.id;
               return (
                 <TouchableOpacity
@@ -224,7 +227,7 @@ export default function ExploreScreen({ route, navigation }) {
         </Text>
         <View style={styles.demoTag}>
           <Ionicons name="flask-outline" size={11} color={colors.muted} />
-          <Text style={styles.demoTagText}>Demo Prototype</Text>
+          <Text style={styles.demoTagText}>{dataSource === 'api' ? 'PostgreSQL' : 'Demo Prototype'}</Text>
         </View>
       </View>
 

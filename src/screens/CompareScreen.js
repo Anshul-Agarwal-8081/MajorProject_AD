@@ -1,14 +1,30 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { SafeAreaView, ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { useCatalogue } from '../hooks/useCatalogue';
 import { ACTIVITIES, colors, statusMeta } from '../theme';
+import { getBeachComparison } from '../services/coastApi';
 
 export default function CompareScreen({ navigation }) {
   const { catalogue } = useCatalogue();
-  const { compareIds, setCompareSelection } = useApp();
+  const { compareIds, setCompareSelection, dataSource } = useApp();
+  const [comparisonResult, setComparisonResult] = useState({ key: '', beaches: [], error: '' });
   const selected = useMemo(() => compareIds.map((id) => catalogue.find((beach) => beach.id === id)).filter(Boolean), [compareIds, catalogue]);
+  const serverIds = selected.map((beach) => beach.serverId);
+  const compareKey = dataSource === 'api' && selected.length === 2 && serverIds.every(Boolean) ? serverIds.join(',') : '';
+  const comparison = comparisonResult.key === compareKey
+    ? { ...comparisonResult, loading: false }
+    : { loading: Boolean(compareKey), beaches: [], error: '' };
+
+  useEffect(() => {
+    let active = true;
+    if (!compareKey) return undefined;
+    getBeachComparison(compareKey.split(','))
+      .then((beaches) => { if (active) setComparisonResult({ key: compareKey, beaches, error: '' }); })
+      .catch((error) => { if (active) setComparisonResult({ key: compareKey, beaches: [], error: error.message }); });
+    return () => { active = false; };
+  }, [compareKey]);
   const choose = (id) => {
     if (compareIds.includes(id)) setCompareSelection(compareIds.filter((value) => value !== id));
     else if (compareIds.length < 2) setCompareSelection([...compareIds, id]);
@@ -18,7 +34,7 @@ export default function CompareScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}><TouchableOpacity onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Go back"><Ionicons name="arrow-back" size={22} color={colors.ocean} /></TouchableOpacity><Text style={styles.title}>Compare beaches</Text><View style={{ width: 22 }} /></View>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.notice}>Choose two beaches. Suitability and conditions are labelled demonstration data.</Text>
+        <Text style={styles.notice}>{dataSource === 'api' ? 'Comparison uses current verified records from PostgreSQL. Missing records stay marked insufficient.' : 'Offline demo comparison. Safety values below are sample data, not live assessments.'}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chooser}>
           {catalogue.map((beach) => {
             const active = compareIds.includes(beach.id);
@@ -27,15 +43,26 @@ export default function CompareScreen({ navigation }) {
         </ScrollView>
         {selected.length === 2 ? (
           <>
+            {comparison.loading ? <Text style={styles.notice}>Loading database comparison…</Text> : null}
+            {comparison.error ? <Text style={styles.notice}>Database comparison unavailable: {comparison.error}</Text> : null}
             <View style={styles.beachNames}><Text style={styles.columnHead}>Information</Text>{selected.map((beach) => <Text key={beach.id} style={styles.beachName}>{beach.name}</Text>)}</View>
             <CompareRow label="Location" values={selected.map((beach) => `${beach.city}, ${beach.state}`)} />
             <CompareRow label="About" values={selected.map((beach) => beach.description || 'No description is available.')} />
             <CompareRow label="Facilities" values={selected.map((beach) => beach.facilities?.join(', ') || 'Not listed')} />
-            {ACTIVITIES.map((activity) => <CompareRow key={activity.id} label={`${activity.label} (demo)`} values={selected.map((beach) => {
-              const result = beach.assessment?.[activity.id];
-              return result ? `${statusMeta(result.status).label}: ${result.explanation}` : 'Insufficient Data';
+            {ACTIVITIES.map((activity) => <CompareRow key={activity.id} label={`${activity.label}${dataSource === 'demo' ? ' (demo)' : ''}`} values={selected.map((beach, index) => {
+              const remoteBeach = comparison.beaches.find((item) => String(item.id) === String(beach.serverId));
+              const result = remoteBeach?.suitability?.find((item) => item.activity === activity.id) || beach.assessment?.[activity.id];
+              const rawStatus = result?.status === 'not_suitable' ? 'notSuitable' : result?.status === 'insufficient_data' ? 'insufficient' : result?.status;
+              return result ? `${statusMeta(rawStatus).label}: ${result.reason || result.explanation || 'No reason supplied.'}` : `Beach ${index + 1}: Insufficient Data`;
             })} />)}
-            <CompareRow label="Wave height (demo)" values={selected.map((beach) => beach.conditions?.waveHeightM != null ? `${beach.conditions.waveHeightM} m` : 'Not available')} />
+            <CompareRow label={dataSource === 'api' ? 'Verified environmental records' : 'Wave height (demo)'} values={selected.map((beach) => {
+              const remoteBeach = comparison.beaches.find((item) => String(item.id) === String(beach.serverId));
+              if (dataSource === 'api') {
+                const records = remoteBeach?.environmental || [];
+                return records.length ? records.map((item) => `${item.measurement}: ${item.value} ${item.unit} · ${item.source}`).join('\n') : 'Insufficient Data: no current verified readings.';
+              }
+              return beach.conditions?.waveHeightM != null ? `${beach.conditions.waveHeightM} m` : 'Not available';
+            })} />
           </>
         ) : <Text style={styles.empty}>Select {2 - selected.length} more beach{selected.length === 1 ? '' : 'es'} to compare.</Text>}
       </ScrollView>

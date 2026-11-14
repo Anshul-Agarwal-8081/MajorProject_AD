@@ -2,14 +2,16 @@ import React from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useApp } from '../context/AppContext';
 
 const PURPOSE_POINTS = [
   'Make beach information easier for visitors to understand.',
-  'Show sample coastal conditions, alerts, and safety guidance in one place.',
+  'Show verified database records when available and clearly marked demo data otherwise.',
   'Encourage people to follow lifeguards and official local advisories.',
 ];
 
 export default function AboutScreen({ navigation }) {
+  const { dataSource, apiError } = useApp();
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
@@ -49,9 +51,12 @@ export default function AboutScreen({ navigation }) {
         <View style={styles.notice}>
           <Ionicons name="information-circle-outline" size={20} color="#8A5A00" />
           <Text style={styles.noticeText}>
-            This is a demonstration prototype. Beach conditions and alerts are sample data, not live safety information. Always follow official advisories and local lifeguards.
+            {dataSource === 'api'
+              ? 'Connected to the CoastSafe database. Verified environmental and suitability records are shown only when available; the separate Open-Meteo forecast is a model, not an official warning. Always follow official advisories and local lifeguards.'
+              : 'Demo or offline mode is active. Sample conditions and alerts are not live safety information. Always follow official advisories and local lifeguards.'}
           </Text>
         </View>
+        {apiError ? <Text style={styles.connectionNote}>{apiError}</Text> : null}
         <Text style={styles.version}>CoastSafe India · Academic project</Text>
       </ScrollView>
     </SafeAreaView>
@@ -76,5 +81,6 @@ const styles = StyleSheet.create({
   pointText: { flex: 1, fontSize: 14, lineHeight: 20, color: '#5C7284' },
   notice: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 14, borderRadius: 12, backgroundColor: '#FFF6E5', marginTop: 2 },
   noticeText: { flex: 1, fontSize: 13, lineHeight: 19, color: '#72501b' },
+  connectionNote: { marginTop: 8, color: '#72501b', fontSize: 12, lineHeight: 17 },
   version: { marginTop: 20, textAlign: 'center', fontSize: 12, color: '#8293a1' },
 });

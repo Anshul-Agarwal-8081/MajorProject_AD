@@ -8,7 +8,8 @@
 //   3. Shows a horizontal scroll of popular beach cards
 //   4. Shows 3 simple beach safety tips
 //
-// All data comes from src/data/beachList.js (local, no API).
+// Beach cards use the shared catalogue, which is database-backed when available
+// and falls back to clearly labelled local demo data when offline.
 // ---------------------------------------------------------
 
 import React, { useState } from 'react';
@@ -24,10 +25,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-import { popularBeaches } from '../data/beachList';
 import DemoBanner from '../components/DemoBanner';
 import SearchBar from '../components/SearchBar';
 import { useCatalogue } from '../hooks/useCatalogue';
+import { useApp } from '../context/AppContext';
 
 // ── Safety tips shown at the bottom of the screen ──────────
 // These are static educational facts, not live data
@@ -54,7 +55,11 @@ const SAFETY_TIPS = [
 
 export default function HomeScreen({ navigation }) {
   const [search, setSearch] = useState('');
-  const { counts } = useCatalogue();
+  const { catalogue, counts } = useCatalogue();
+  const { dataSource } = useApp();
+  const popularBeaches = catalogue.filter((beach) => beach.popular || beach.recommended).slice(0, 8);
+  const featuredBeaches = popularBeaches.length ? popularBeaches : catalogue.slice(0, 6);
+  const summaryLabel = dataSource === 'api' ? '' : ' (demo)';
   const openSearch = () => navigation.navigate('Explore', { initialSearch: search });
 
   return (
@@ -81,7 +86,7 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         <View style={styles.summary}>
-          <Text style={styles.summaryTitle}>Safety summary <Text style={styles.summaryDemo}>(sample)</Text></Text>
+            <Text style={styles.summaryTitle}>Safety summary <Text style={styles.summaryDemo}>{summaryLabel}</Text></Text>
           <View style={styles.summaryRow}>
             {[['Suitable', counts.suitable, '#15803d'], ['Caution', counts.caution, '#b45309'], ['Not suitable', counts.notSuitable, '#b91c1c'], ['Insufficient', counts.insufficient, '#64748b']].map(([label, count, color]) => (
               <View key={label} style={styles.summaryItem}><Text style={[styles.summaryCount, { color }]}>{count}</Text><Text style={styles.summaryLabel}>{label}</Text></View>
@@ -107,7 +112,7 @@ export default function HomeScreen({ navigation }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.popularRow}
           >
-            {popularBeaches.map(beach => (
+            {featuredBeaches.map(beach => (
               <TouchableOpacity
                 key={beach.id}
                 style={styles.featuredCard}

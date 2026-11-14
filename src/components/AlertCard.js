@@ -8,11 +8,13 @@ const SEVERITY_COLORS = {
   warning: colors.caution,
   advisory: colors.teal,
   info: colors.info,
+  information: colors.info,
   demo: colors.demo,
 };
 
 export default function AlertCard({ alert, onPress }) {
   const accentColor = SEVERITY_COLORS[alert.severity] || colors.caution;
+  const isDemo = alert.isDemo !== false;
 
   return (
     <TouchableOpacity
@@ -56,18 +58,18 @@ export default function AlertCard({ alert, onPress }) {
       <View style={styles.footerRow}>
         <View style={styles.timeRow}>
           <Ionicons name="time-outline" size={12} color={colors.muted} />
-          <Text style={styles.timeText}>{alert.issuedAt || 'Sample bulletin'}</Text>
+          <Text style={styles.timeText}>{alert.issuedAt || 'Date not provided'}</Text>
         </View>
 
         <View style={[styles.statusTag, { backgroundColor: accentColor + '15' }]}>
           <View style={[styles.statusDot, { backgroundColor: accentColor }]} />
-          <Text style={[styles.statusText, { color: accentColor }]}>Sample</Text>
+          <Text style={[styles.statusText, { color: accentColor }]}>{isDemo ? 'Demo' : 'Active'}</Text>
         </View>
       </View>
 
       <View style={styles.demoTag}>
-        <Ionicons name="flask-outline" size={11} color={colors.muted} />
-        <Text style={styles.demoTagText}>Simulated Demonstration Record</Text>
+        <Ionicons name={isDemo ? 'flask-outline' : 'shield-checkmark-outline'} size={11} color={isDemo ? colors.muted : colors.teal} />
+        <Text style={styles.demoTagText}>{isDemo ? 'DEMO · NOT AN OFFICIAL WARNING' : `VERIFIED · ${alert.source || 'CoastSafe database'}`}</Text>
       </View>
     </TouchableOpacity>
   );

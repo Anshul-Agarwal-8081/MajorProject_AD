@@ -13,19 +13,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, shadow, STATUS_META } from '../theme';
 import { useCatalogue } from '../hooks/useCatalogue';
+import { useApp } from '../context/AppContext';
 import SuitabilityBadge from '../components/SuitabilityBadge';
 
 const { width, height } = Dimensions.get('window');
 
 const MAP_LEGEND_ITEMS = [
-  { label: 'Suitable', color: colors.suitable, desc: 'Sample category' },
-  { label: 'Caution', color: colors.caution, desc: 'Sample category' },
-  { label: 'Not Suitable', color: colors.notSuitable, desc: 'Sample category' },
-  { label: 'Insufficient Data', color: colors.insufficient, desc: 'No sample assessment' },
+  { label: 'Suitable', color: colors.suitable, desc: 'Verified or demo result' },
+  { label: 'Caution', color: colors.caution, desc: 'Verified or demo result' },
+  { label: 'Not Suitable', color: colors.notSuitable, desc: 'Verified or demo result' },
+  { label: 'Insufficient Data', color: colors.insufficient, desc: 'No current verified assessment' },
 ];
 
 export default function MapScreen({ navigation }) {
   const { catalogue } = useCatalogue();
+  const { dataSource } = useApp();
   const [selectedState, setSelectedState] = useState('All');
   const [selectedActivity, setSelectedActivity] = useState('swimming');
   const states = ['All', ...new Set(catalogue.map((beach) => beach.state).filter(Boolean).sort())];
@@ -55,7 +57,7 @@ export default function MapScreen({ navigation }) {
               <Text style={styles.headerTitle}>Coastal India Overview</Text>
             </View>
             <Text style={styles.headerSubtitle}>
-              {visibleCatalogue.length} sample coastal locations
+              {visibleCatalogue.length} {dataSource === 'api' ? 'database beaches' : 'demo coastal locations'}
             </Text>
           </View>
 
@@ -139,13 +141,13 @@ export default function MapScreen({ navigation }) {
                 {isSelected ? <Text style={styles.geoMarkerLabel} numberOfLines={1}>{beach.name}</Text> : null}
               </TouchableOpacity>;
             })}
-            <View style={styles.geoDisclaimer}><Text style={styles.geoDisclaimerText}>Schematic demo · approximate beach coordinates · sample statuses</Text></View>
+            <View style={styles.geoDisclaimer}><Text style={styles.geoDisclaimerText}>{dataSource === 'api' ? 'Schematic map · approximate database coordinates · verified statuses only' : 'Schematic demo · approximate coordinates · sample statuses'}</Text></View>
           </View>
         </View>
       ) : (
         /* Full List Mode */
         <ScrollView style={styles.listContainer} contentContainerStyle={styles.listContent}>
-          <Text style={styles.listHeaderTitle}>Sample Beaches</Text>
+          <Text style={styles.listHeaderTitle}>{dataSource === 'api' ? 'Database Beaches' : 'Demo Beaches'}</Text>
           {visibleCatalogue.map((beach) => {
             const status = beach.assessment?.[selectedActivity]?.status || 'insufficient';
             const isSelected = selectedBeach?.id === beach.id;
@@ -161,7 +163,7 @@ export default function MapScreen({ navigation }) {
                 onPress={() => handleMarkerSelect(beach)}
                 activeOpacity={0.88}
               >
-                <Image source={{ uri: beach.image }} style={styles.beachListImage} />
+                {beach.image ? <Image source={{ uri: beach.image }} style={styles.beachListImage} /> : <View style={[styles.beachListImage, styles.mapImageFallback]}><Ionicons name="water-outline" size={22} color={colors.teal} /></View>}
                 <View style={styles.beachListInfo}>
                   <Text style={styles.beachListName}>{beach.name}</Text>
                   <Text style={styles.beachListLoc}>
@@ -201,7 +203,7 @@ export default function MapScreen({ navigation }) {
       {selectedBeach && (
         <View style={styles.bottomCardWrapper}>
           <View style={styles.bottomCard}>
-            <Image source={{ uri: selectedBeach.image }} style={styles.bottomCardImage} />
+            {selectedBeach.image ? <Image source={{ uri: selectedBeach.image }} style={styles.bottomCardImage} /> : <View style={[styles.bottomCardImage, styles.mapImageFallback]}><Ionicons name="water-outline" size={22} color={colors.teal} /></View>}
 
             <View style={styles.bottomCardContent}>
               <View style={styles.bottomCardTopRow}>
@@ -227,13 +229,13 @@ export default function MapScreen({ navigation }) {
                 <View style={styles.bottomParamChip}>
                   <Ionicons name="water-outline" size={11} color={colors.ocean} />
                   <Text style={styles.bottomParamText}>
-                    Wave: {selectedBeach.conditions?.waveHeightM != null ? `${selectedBeach.conditions.waveHeightM}m` : 'Not available'}
+                    Wave: {selectedBeach.conditions?.waveHeightM != null ? `${selectedBeach.conditions.waveHeightM}m` : 'No verified reading'}
                   </Text>
                 </View>
                 <View style={styles.bottomParamChip}>
                   <Ionicons name="speedometer-outline" size={11} color={colors.teal} />
                   <Text style={styles.bottomParamText}>
-                    Wind: {selectedBeach.conditions?.windSpeedKmh != null ? `${selectedBeach.conditions.windSpeedKmh} km/h` : 'Not available'}
+                    Wind: {selectedBeach.conditions?.windSpeedKmh != null ? `${selectedBeach.conditions.windSpeedKmh} km/h` : 'No verified reading'}
                   </Text>
                 </View>
               </View>
@@ -526,6 +528,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 10,
   },
+  mapImageFallback: { backgroundColor: colors.turquoiseSoft, alignItems: 'center', justifyContent: 'center' },
   beachListInfo: {
     flex: 1,
     marginLeft: 10,
