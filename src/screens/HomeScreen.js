@@ -11,7 +11,7 @@
 // All data comes from src/data/beachList.js (local, no API).
 // ---------------------------------------------------------
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { popularBeaches } from '../data/beachList';
 import DemoBanner from '../components/DemoBanner';
+import SearchBar from '../components/SearchBar';
+import { useCatalogue } from '../hooks/useCatalogue';
 
 // ── Safety tips shown at the bottom of the screen ──────────
 // These are static educational facts, not live data
@@ -51,6 +53,10 @@ const SAFETY_TIPS = [
 ];
 
 export default function HomeScreen({ navigation }) {
+  const [search, setSearch] = useState('');
+  const { counts } = useCatalogue();
+  const openSearch = () => navigation.navigate('Explore', { initialSearch: search });
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0B3A5B" />
@@ -66,6 +72,22 @@ export default function HomeScreen({ navigation }) {
 
         {/* ── 2. Demo Data Notice ──────────────────────────── */}
         <DemoBanner />
+
+        <View style={styles.quickFind}>
+          <SearchBar value={search} onChangeText={setSearch} placeholder="Search beaches or states..." />
+          <TouchableOpacity style={styles.searchAction} onPress={openSearch} accessibilityRole="button" accessibilityLabel="Search beaches">
+            <Ionicons name="arrow-forward" size={20} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.summary}>
+          <Text style={styles.summaryTitle}>Safety summary <Text style={styles.summaryDemo}>(sample)</Text></Text>
+          <View style={styles.summaryRow}>
+            {[['Suitable', counts.suitable, '#15803d'], ['Caution', counts.caution, '#b45309'], ['Not suitable', counts.notSuitable, '#b91c1c'], ['Insufficient', counts.insufficient, '#64748b']].map(([label, count, color]) => (
+              <View key={label} style={styles.summaryItem}><Text style={[styles.summaryCount, { color }]}>{count}</Text><Text style={styles.summaryLabel}>{label}</Text></View>
+            ))}
+          </View>
+        </View>
 
         {/* ── 3. Popular Beaches (horizontal scroll) ───────── */}
         <View style={styles.section}>
@@ -166,6 +188,15 @@ const styles = StyleSheet.create({
     marginTop: 22,
     paddingHorizontal: 16,
   },
+  quickFind: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: 12 },
+  searchAction: { width: 46, height: 46, borderRadius: 14, backgroundColor: '#0E7C86', alignItems: 'center', justifyContent: 'center' },
+  summary: { marginHorizontal: 16, marginTop: 16, padding: 14, backgroundColor: '#ffffff', borderRadius: 14, borderWidth: 1, borderColor: '#D7E4EE' },
+  summaryTitle: { color: '#122433', fontWeight: '700', marginBottom: 10 },
+  summaryDemo: { color: '#8A5A00', fontSize: 11, fontWeight: '600' },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  summaryItem: { alignItems: 'center', flex: 1 },
+  summaryCount: { fontSize: 20, fontWeight: '800' },
+  summaryLabel: { color: '#5C7284', fontSize: 10, textAlign: 'center', marginTop: 2 },
   sectionTitle: {
     fontSize: 17,
     fontWeight: '700',

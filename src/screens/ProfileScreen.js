@@ -28,6 +28,9 @@ export default function ProfileScreen({ navigation }) {
     notificationPrefs,
     setNotificationPref,
     locationLabel,
+    notifications,
+    markNotificationRead,
+    markAllNotificationsRead,
   } = useApp();
 
   const handleSimulatedAction = (featureName) => {
@@ -177,6 +180,20 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </View>
 
+          <View style={styles.cardSection}>
+            <View style={styles.notificationHeader}>
+              <View><Text style={styles.cardTitle}>In-app notifications</Text><Text style={styles.cardSubtitle}>Sample items saved on this device</Text></View>
+              <TouchableOpacity onPress={markAllNotificationsRead} accessibilityRole="button"><Text style={styles.markRead}>Mark all read</Text></TouchableOpacity>
+            </View>
+            {(notifications || []).slice(0, 6).map((item) => (
+              <TouchableOpacity key={item.id} style={[styles.notificationEntry, !item.read && styles.notificationUnread]} onPress={() => markNotificationRead(item.id)} accessibilityRole="button">
+                <Ionicons name="notifications-outline" size={17} color={colors.teal} />
+                <View style={{ flex: 1 }}><Text style={styles.notificationTitle}>{item.title}</Text><Text style={styles.notificationBody} numberOfLines={2}>{item.body}</Text></View>
+                <Text style={styles.notificationDemo}>DEMO</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           {/* Section: About CoastSafe India */}
           <View style={styles.cardSection}>
             <TouchableOpacity
@@ -308,6 +325,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 3,
   },
+  notificationHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  markRead: { color: colors.teal, fontSize: 11, fontWeight: '700' },
+  notificationEntry: { flexDirection: 'row', alignItems: 'flex-start', gap: 9, padding: 10, borderRadius: 10, backgroundColor: colors.foam, marginTop: 6 },
+  notificationUnread: { borderLeftWidth: 3, borderLeftColor: colors.teal },
+  notificationTitle: { color: colors.ink, fontSize: 12, fontWeight: '700' },
+  notificationBody: { color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 3 },
+  notificationDemo: { color: colors.demo, fontSize: 9, fontWeight: '800' },
   aboutLinkIcon: {
     width: 38,
     height: 38,

@@ -92,10 +92,12 @@ export function AppProvider({ children }) {
         if (current.compareIds.includes(beachId)) {
           return { ...current, compareIds: current.compareIds.filter((id) => id !== beachId) };
         }
-        if (current.compareIds.length >= 3) return { ...current, compareMessage: 'Compare up to 3 beaches. Remove one to add another.' };
+        if (current.compareIds.length >= 2) return { ...current, compareMessage: 'Compare two beaches. Remove one to choose another.' };
         return { ...current, compareIds: [...current.compareIds, beachId], compareMessage: '' };
       });
     };
+
+    const setCompareSelection = (beachIds) => update({ compareIds: beachIds.slice(0, 2), compareMessage: '' });
 
     const setNotificationPref = (key, enabled) => {
       setState((current) => ({
@@ -143,6 +145,7 @@ export function AppProvider({ children }) {
       })),
       addNotification,
       toggleCompare,
+      setCompareSelection,
       clearCompare: () => update({ compareIds: [], compareMessage: '' }),
       setPlace: (placeId) => update({ placeId, locationSource: 'simulated', locationMessage: 'Using a simulated place chosen in the app.' }),
       useDeviceLocation: async () => {

@@ -24,6 +24,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { colors } from '../theme';
+import { useApp } from '../context/AppContext';
 
 // ── Import all screens ─────────────────────────────────────
 import HomeScreen from '../screens/HomeScreen';
@@ -35,6 +39,8 @@ import SavedScreen from '../screens/SavedScreen';
 import AboutScreen from '../screens/AboutScreen';
 import ExploreScreen from '../screens/ExploreScreen';
 import MapScreen from '../screens/MapScreen';
+import CompareScreen from '../screens/CompareScreen';
+import OnboardingScreen from '../screens/OnboardingScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -95,20 +101,31 @@ function BottomTabs() {
 // MainTabs is the first screen (shows the bottom bar).
 // BeachDetail is pushed on top when a beach card is tapped.
 export default function AppNavigator() {
+  const { hydrated, onboardingComplete } = useApp();
+
+  if (!hydrated) {
+    return <SafeAreaView style={splashStyles.container}><View style={splashStyles.mark}><Ionicons name="water" size={36} color={colors.white} /></View><Text style={splashStyles.title}>CoastSafe India</Text><Text style={splashStyles.subtitle}>A little care goes a long way</Text><ActivityIndicator color={colors.turquoiseSoft} style={{ marginTop: 22 }} /></SafeAreaView>;
+  }
+
   return (
-    <NavigationContainer>
+    <NavigationContainer key={onboardingComplete ? 'main-app' : 'first-run'}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="MainTabs"    component={BottomTabs} />
-        <Stack.Screen
-          name="BeachDetail"
-          component={BeachDetailScreen}
-          // Slide up from the bottom for a natural mobile feel
-          options={{ animation: 'slide_from_bottom' }}
-        />
-        <Stack.Screen name="About" component={AboutScreen} options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="Explore" component={ExploreScreen} options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="Map" component={MapScreen} options={{ animation: 'slide_from_right' }} />
+        {!onboardingComplete ? <Stack.Screen name="Onboarding" component={OnboardingScreen} /> : <>
+          <Stack.Screen name="MainTabs" component={BottomTabs} />
+          <Stack.Screen name="BeachDetail" component={BeachDetailScreen} options={{ animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="About" component={AboutScreen} options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="Explore" component={ExploreScreen} options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="Map" component={MapScreen} options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="Compare" component={CompareScreen} options={{ animation: 'slide_from_right' }} />
+        </>}
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+const splashStyles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.oceanDeep },
+  mark: { width: 72, height: 72, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.teal },
+  title: { color: colors.white, fontSize: 25, fontWeight: '800', marginTop: 16 },
+  subtitle: { color: colors.turquoiseSoft, marginTop: 6 },
+});

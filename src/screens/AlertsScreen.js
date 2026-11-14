@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, shadow } from '../theme';
 import { alerts, filterAlerts } from '../data/alerts';
 import AlertCard from '../components/AlertCard';
+import { useApp } from '../context/AppContext';
 
 const SEVERITY_FILTERS = [
   { id: 'all', label: 'All Bulletins' },
@@ -24,6 +25,8 @@ const SEVERITY_FILTERS = [
 export default function AlertsScreen() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedAlertModal, setSelectedAlertModal] = useState(null);
+  const [savedAlertIds, setSavedAlertIds] = useState([]);
+  const { addNotification } = useApp();
 
   const filteredAlerts = useMemo(() => {
     return filterAlerts(alerts, activeFilter);
@@ -188,6 +191,8 @@ export default function AlertsScreen() {
                   </View>
                 </View>
 
+                <Text style={styles.modalSourceText}>Type: {(selectedAlertModal.category || 'general').replace(/_/g, ' ')} · Expires: {selectedAlertModal.expiresAt || 'Not specified'}</Text>
+
                 <Text style={styles.modalSectionHeading}>Sample Advisory Summary</Text>
                 <Text style={styles.modalDescriptionText}>
                   {selectedAlertModal.description}
@@ -215,6 +220,18 @@ export default function AlertsScreen() {
                 </View>
               </ScrollView>
 
+              <TouchableOpacity
+                style={styles.modalNotificationBtn}
+                onPress={() => {
+                  if (!savedAlertIds.includes(selectedAlertModal.id)) {
+                    addNotification({ title: `Sample alert: ${selectedAlertModal.title}`, body: selectedAlertModal.description, category: selectedAlertModal.category, source: selectedAlertModal.source });
+                    setSavedAlertIds((current) => [...current, selectedAlertModal.id]);
+                  }
+                }}
+                accessibilityRole="button"
+              >
+                <Text style={styles.modalNotificationText}>{savedAlertIds.includes(selectedAlertModal.id) ? 'Added to in-app notifications' : 'Add sample to notifications'}</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalDismissBtn}
                 onPress={() => setSelectedAlertModal(null)}
@@ -520,6 +537,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
+  modalNotificationBtn: { alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 14 },
+  modalNotificationText: { color: colors.teal, fontWeight: '700' },
   modalDismissBtnText: {
     color: colors.white,
     fontSize: 15,

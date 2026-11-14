@@ -27,6 +27,7 @@ const SUITABILITY_LIST = [
   { id: 'suitable', label: 'Suitable' },
   { id: 'caution', label: 'Caution' },
   { id: 'notSuitable', label: 'Not Suitable' },
+  { id: 'insufficient', label: 'Insufficient Data' },
 ];
 
 const SORT_OPTIONS = [
@@ -100,6 +101,10 @@ export default function ExploreScreen({ route, navigation }) {
           onClear={() => setQuery('')}
           placeholder="Filter by beach, city or state..."
         />
+        <TouchableOpacity style={styles.compareAction} onPress={() => navigation.navigate('Compare')} accessibilityRole="button">
+          <Ionicons name="git-compare-outline" size={17} color={colors.ocean} />
+          <Text style={styles.compareActionText}>Compare two beaches</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Filter Chips Bar */}
@@ -267,6 +272,8 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     backgroundColor: colors.foam,
   },
+  compareAction: { alignSelf: 'flex-start', marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.turquoiseSoft, paddingHorizontal: 11, paddingVertical: 8, borderRadius: 12 },
+  compareActionText: { color: colors.ocean, fontSize: 12, fontWeight: '700' },
   headerTitleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

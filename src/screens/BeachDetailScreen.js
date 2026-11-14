@@ -12,6 +12,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { getBeachById } from '../services/beachService';
+import { useCatalogue } from '../hooks/useCatalogue';
 
 const statusLook = {
   Suitable: { text: '#15803d', bg: '#dcfce7' },
@@ -68,14 +69,14 @@ const visitorTips = [
   },
 ];
 
-function StatusRow({ icon, label, status }) {
+function StatusRow({ icon, label, status, reason }) {
   const shownStatus = displayStatus(status);
   const look = statusLook[shownStatus] || { text: '#64748b', bg: '#f1f5f9' };
 
   return (
     <View style={styles.statusRow}>
       <Ionicons name={icon} size={18} color="#475569" />
-      <Text style={styles.activityName}>{label}</Text>
+      <View style={styles.statusCopy}><Text style={styles.activityName}>{label}</Text><Text style={styles.statusReason}>{reason || 'This is a sample label; no verified activity assessment is connected.'}</Text></View>
       <View style={[styles.badge, { backgroundColor: look.bg }]}>
         <Text style={[styles.badgeText, { color: look.text }]}>{shownStatus}</Text>
       </View>
@@ -91,6 +92,7 @@ export default function BeachDetailScreen({ navigation, route }) {
   const [loading, setLoading] = useState(Boolean(beachId && !routeBeach));
   const [loadError, setLoadError] = useState(false);
   const { isFavorite, toggleFavorite } = useApp();
+  const { catalogue } = useCatalogue();
 
   useEffect(() => {
     let active = true;
@@ -125,8 +127,9 @@ export default function BeachDetailScreen({ navigation, route }) {
     );
   }
 
-  const facilities = beach.facilities || [];
-  const safetyNotes = beach.safety || [];
+  const modelBeach = catalogue.find((item) => item.name === beach.name);
+  const facilities = beach.facilities?.length ? beach.facilities : modelBeach?.facilities || [];
+  const safetyNotes = beach.safety?.length ? beach.safety : beach.safetyNotes?.length ? beach.safetyNotes : modelBeach?.safety || [];
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -205,7 +208,8 @@ export default function BeachDetailScreen({ navigation, route }) {
                 key={activity.key}
                 icon={activity.icon}
                 label={activity.label}
-                status={beach[activity.key]}
+                status={beach.assessment?.[activity.key]?.status || modelBeach?.assessment?.[activity.key]?.status || beach[activity.key]}
+                reason={beach.assessment?.[activity.key]?.explanation || modelBeach?.assessment?.[activity.key]?.explanation}
               />
             ))}
           </View>
@@ -370,6 +374,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
   },
+  statusCopy: { flex: 1, marginHorizontal: 9 },
+  statusReason: { color: '#64748b', fontSize: 11, lineHeight: 16, marginTop: 3 },
   activityName: {
     flex: 1,
     marginLeft: 10,
