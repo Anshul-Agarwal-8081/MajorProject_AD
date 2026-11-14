@@ -19,6 +19,16 @@ const statusLook = {
   'Not Suitable': { text: '#b91c1c', bg: '#fee2e2' },
 };
 
+function displayStatus(status) {
+  if (!status) return 'Unknown';
+  const normalized = String(status).toLowerCase().replace(/[_-]/g, ' ');
+  if (normalized === 'suitable') return 'Suitable';
+  if (normalized === 'caution') return 'Caution';
+  if (normalized === 'not suitable') return 'Not Suitable';
+  if (normalized === 'insufficient' || normalized === 'insufficient data') return 'Insufficient Data';
+  return status;
+}
+
 const activities = [
   { key: 'swimming', label: 'Swimming', icon: 'water-outline' },
   { key: 'surfing', label: 'Surfing', icon: 'flag-outline' },
@@ -59,14 +69,15 @@ const visitorTips = [
 ];
 
 function StatusRow({ icon, label, status }) {
-  const look = statusLook[status] || { text: '#64748b', bg: '#f1f5f9' };
+  const shownStatus = displayStatus(status);
+  const look = statusLook[shownStatus] || { text: '#64748b', bg: '#f1f5f9' };
 
   return (
     <View style={styles.statusRow}>
       <Ionicons name={icon} size={18} color="#475569" />
       <Text style={styles.activityName}>{label}</Text>
       <View style={[styles.badge, { backgroundColor: look.bg }]}>
-        <Text style={[styles.badgeText, { color: look.text }]}>{status || 'Unknown'}</Text>
+        <Text style={[styles.badgeText, { color: look.text }]}>{shownStatus}</Text>
       </View>
     </View>
   );
@@ -77,22 +88,35 @@ export default function BeachDetailScreen({ navigation, route }) {
   const routeBeach = route.params?.beach;
   const beachId = route.params?.beachId ?? routeBeach?.id;
   const [beach, setBeach] = useState(routeBeach || null);
+  const [loading, setLoading] = useState(Boolean(beachId && !routeBeach));
+  const [loadError, setLoadError] = useState(false);
   const { isFavorite, toggleFavorite } = useApp();
 
   useEffect(() => {
     let active = true;
     if (!beachId) return undefined;
     getBeachById(beachId, routeBeach).then(({ beach: item }) => {
-      if (active && item) setBeach(item);
+      if (active) {
+        setBeach(item || null);
+        setLoadError(false);
+      }
+    }).catch(() => {
+      if (active) setLoadError(true);
+    }).finally(() => {
+      if (active) setLoading(false);
     });
     return () => { active = false; };
   }, [beachId, routeBeach]);
+
+  if (loading && !beach) {
+    return <SafeAreaView style={styles.container}><View style={styles.missing}><Text style={styles.missingTitle}>Loading beach details…</Text></View></SafeAreaView>;
+  }
 
   if (!beach) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.missing}>
-          <Text style={styles.missingTitle}>Beach not found</Text>
+          <Text style={styles.missingTitle}>{loadError ? 'Beach details could not be loaded' : 'Beach not found'}</Text>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.missingLink}>Go back</Text>
           </TouchableOpacity>
@@ -110,7 +134,7 @@ export default function BeachDetailScreen({ navigation, route }) {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View>
-          <Image source={{ uri: beach.image }} style={styles.hero} />
+          {beach.image ? <Image source={{ uri: beach.image }} style={styles.hero} onError={() => setBeach((current) => current ? { ...current, image: null } : current)} /> : <View style={[styles.hero, styles.heroFallback]}><Ionicons name="image-outline" size={40} color="#64748b" /></View>}
           <TouchableOpacity
             style={[styles.backBtn, { top: insets.top + 8 }]}
             onPress={() => navigation.goBack()}
@@ -208,6 +232,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 240,
     backgroundColor: '#cbd5e1',
+  },
+  heroFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   backBtn: {
     position: 'absolute',

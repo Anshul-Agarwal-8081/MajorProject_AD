@@ -34,12 +34,18 @@ export default function BeachesScreen({ navigation }) {
   // setSearchText updates it every time the user types a character
   const [searchText, setSearchText] = useState('');
   const [beaches, setBeaches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const { isFavorite, toggleFavorite } = useApp();
 
   useEffect(() => {
     let active = true;
     getBeaches().then(({ beaches: items }) => {
       if (active) setBeaches(items);
+    }).catch(() => {
+      if (active) setLoadError('Beaches could not be loaded. Please try again.');
+    }).finally(() => {
+      if (active) setLoading(false);
     });
     return () => { active = false; };
   }, []);
@@ -58,7 +64,7 @@ export default function BeachesScreen({ navigation }) {
       <View style={styles.header}>
         <Text style={styles.heading}>Indian Beaches</Text>
         <Text style={styles.subheading}>
-          {beaches.length} beaches in demo dataset
+          {beaches.length} beaches {beaches.length ? 'available' : 'in the demo dataset'}
         </Text>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.headerAction} onPress={() => navigation.navigate('Explore')}>
@@ -121,7 +127,11 @@ export default function BeachesScreen({ navigation }) {
             onFavoritePress={() => toggleFavorite(item.id)}
           />
         )}
-        ListEmptyComponent={
+        ListEmptyComponent={loading ? (
+          <View style={styles.emptyBox}><Text style={styles.emptyText}>Loading beaches…</Text></View>
+        ) : loadError ? (
+          <View style={styles.emptyBox}><Text style={styles.emptyText}>{loadError}</Text></View>
+        ) : (
           <View style={styles.emptyBox}>
             <Ionicons name="search-outline" size={44} color="#cbd5e1" />
             <Text style={styles.emptyText}>
@@ -131,7 +141,7 @@ export default function BeachesScreen({ navigation }) {
               Try searching for a beach name or state
             </Text>
           </View>
-        }
+        )}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />

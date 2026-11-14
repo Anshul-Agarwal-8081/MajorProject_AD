@@ -94,9 +94,9 @@ export default function AlertsScreen() {
       >
         <View style={styles.statusSummaryRow}>
           <Text style={styles.activeAdvisoriesCount}>
-            {filteredAlerts.length} {filteredAlerts.length === 1 ? 'Advisory' : 'Advisories'} Active
+            {filteredAlerts.length} sample {filteredAlerts.length === 1 ? 'bulletin' : 'bulletins'}
           </Text>
-          <Text style={styles.sourceLabel}>Simulated INCOIS Feed</Text>
+          <Text style={styles.sourceLabel}>Simulated sample feed</Text>
         </View>
 
         {filteredAlerts.map((alert) => (
@@ -179,16 +179,16 @@ export default function AlertsScreen() {
                     </Text>
                   </View>
                   <View style={styles.modalMetaItem}>
-                    <Text style={styles.modalMetaLabel}>Status</Text>
-                    <Text style={styles.modalMetaVal}>Active</Text>
+                    <Text style={styles.modalMetaLabel}>Demo Status</Text>
+                    <Text style={styles.modalMetaVal}>Simulated</Text>
                   </View>
                   <View style={styles.modalMetaItem}>
                     <Text style={styles.modalMetaLabel}>Issued</Text>
-                    <Text style={styles.modalMetaVal}>{selectedAlertModal.issuedAt || 'Active'}</Text>
+                    <Text style={styles.modalMetaVal}>{selectedAlertModal.issuedAt || 'Sample record'}</Text>
                   </View>
                 </View>
 
-                <Text style={styles.modalSectionHeading}>Official Advisory Summary</Text>
+                <Text style={styles.modalSectionHeading}>Sample Advisory Summary</Text>
                 <Text style={styles.modalDescriptionText}>
                   {selectedAlertModal.description}
                 </Text>

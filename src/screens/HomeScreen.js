@@ -34,7 +34,7 @@ const SAFETY_TIPS = [
     id: '1',
     icon: 'flag-outline',
     title: 'Understand Beach Flags',
-    body: 'Red = no swimming. Yellow = swim with caution. Green = safe conditions. Always obey lifeguard flags.',
+    body: 'Red means no swimming; yellow means use caution. Green is not a guarantee of safety. Always follow lifeguard instructions.',
   },
   {
     id: '2',
@@ -69,7 +69,12 @@ export default function HomeScreen({ navigation }) {
 
         {/* ── 3. Popular Beaches (horizontal scroll) ───────── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Popular Beaches</Text>
+          <View style={styles.sectionHeadingRow}>
+            <Text style={styles.sectionTitle}>Popular Beaches</Text>
+            <TouchableOpacity accessibilityRole="button" onPress={() => navigation.navigate('Beaches')}>
+              <Text style={styles.sectionLink}>All beaches</Text>
+            </TouchableOpacity>
+          </View>
 
           {/*
             ScrollView with horizontal={true} lets cards scroll left-right.
@@ -165,6 +170,17 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: '#1e293b',
+    marginBottom: 12,
+  },
+  sectionHeadingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sectionLink: {
+    color: '#0E7C86',
+    fontSize: 13,
+    fontWeight: '700',
     marginBottom: 12,
   },
 

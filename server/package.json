@@ -1,0 +1,14 @@
+{
+  "name": "coastsafe-india-api",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "scripts": {
+    "start": "node --env-file=.env index.js"
+  },
+  "dependencies": {
+    "pg": "^8.0.0"
+  }
+}

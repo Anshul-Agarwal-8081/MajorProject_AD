@@ -15,17 +15,6 @@ import { useCatalogue } from '../hooks/useCatalogue';
 import BeachCard from '../components/BeachCard';
 import SearchBar from '../components/SearchBar';
 
-const STATES_LIST = [
-  'All',
-  'Goa',
-  'Kerala',
-  'Tamil Nadu',
-  'Odisha',
-  'Karnataka',
-  'Maharashtra',
-  'Andaman and Nicobar Islands',
-];
-
 const ACTIVITIES_LIST = [
   { id: 'all', label: 'All Activities' },
   { id: 'swimming', label: 'Swimming' },
@@ -59,13 +48,14 @@ export default function ExploreScreen({ route, navigation }) {
   const [selectedSort, setSelectedSort] = useState('distance');
 
   // Hook into project's filter engine
-  const { filtered } = useCatalogue({
+  const { catalogue, filtered } = useCatalogue({
     query,
     state: selectedState,
     activity: selectedActivity,
     suitability: selectedSuitability,
     sort: selectedSort,
   });
+  const statesList = ['All', ...new Set(catalogue.map((beach) => beach.state).filter(Boolean).sort((a, b) => a.localeCompare(b)))];
 
   const resetFilters = () => {
     setQuery('');
@@ -122,7 +112,7 @@ export default function ExploreScreen({ route, navigation }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalPills}
           >
-            {STATES_LIST.map((st) => {
+            {statesList.map((st) => {
               const isSelected = selectedState === st;
               return (
                 <TouchableOpacity

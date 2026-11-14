@@ -32,6 +32,9 @@ yarn-error.*
 
 # local env files
 .env*.local
+**/.env
+**/.env.*
+!**/.env.example
 
 # typescript
 *.tsbuildinfo
@@ -52,6 +55,3 @@ start-web.sh
 # Web build output folders
 /web-build/
 /dist/
-
-# package-lock changes from npm --no-save installs
-package-lock.json

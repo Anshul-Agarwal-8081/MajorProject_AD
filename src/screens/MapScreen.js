@@ -18,19 +18,20 @@ import SuitabilityBadge from '../components/SuitabilityBadge';
 const { width, height } = Dimensions.get('window');
 
 const MAP_LEGEND_ITEMS = [
-  { label: 'Suitable', color: colors.suitable, desc: 'Safe for recreation' },
-  { label: 'Caution', color: colors.caution, desc: 'Moderate wave/current' },
-  { label: 'Not Suitable', color: colors.notSuitable, desc: 'High hazard risk' },
-  { label: 'Insufficient Data', color: colors.insufficient, desc: 'Unverified sensor' },
+  { label: 'Suitable', color: colors.suitable, desc: 'Sample category' },
+  { label: 'Caution', color: colors.caution, desc: 'Sample category' },
+  { label: 'Not Suitable', color: colors.notSuitable, desc: 'Sample category' },
+  { label: 'Insufficient Data', color: colors.insufficient, desc: 'No sample assessment' },
 ];
 
 export default function MapScreen({ navigation }) {
   const { catalogue } = useCatalogue();
-  const [selectedBeach, setSelectedBeach] = useState(catalogue[0] || null);
+  const [selectedBeachId, setSelectedBeachId] = useState(catalogue[0]?.id || null);
+  const selectedBeach = catalogue.find((beach) => beach.id === selectedBeachId) || catalogue[0] || null;
   const [viewMode, setViewMode] = useState('radar'); // 'radar' | 'list'
 
   const handleMarkerSelect = (beach) => {
-    setSelectedBeach(beach);
+    setSelectedBeachId(beach.id);
   };
 
   const handleOpenDetail = (beach) => {
@@ -47,10 +48,10 @@ export default function MapScreen({ navigation }) {
           <View>
             <View style={styles.headerTitleRow}>
               <Ionicons name="map" size={20} color={colors.turquoiseSoft} />
-              <Text style={styles.headerTitle}>Coastal India Map</Text>
+              <Text style={styles.headerTitle}>Coastal India Overview</Text>
             </View>
             <Text style={styles.headerSubtitle}>
-              {catalogue.length} Monitored Coastal Stations
+              {catalogue.length} sample coastal locations
             </Text>
           </View>
 
@@ -120,18 +121,18 @@ export default function MapScreen({ navigation }) {
                 <Ionicons name="compass-outline" size={18} color={colors.turquoise} />
                 <Text style={styles.coastOutlineTitle}>Indian Coastline Geo-Stations</Text>
                 <View style={styles.demoBadge}>
-                  <Text style={styles.demoBadgeText}>SIMULATED GPS</Text>
+                  <Text style={styles.demoBadgeText}>SCHEMATIC DEMO</Text>
                 </View>
               </View>
 
               <Text style={styles.coastOutlineSub}>
-                Tap any station marker along the western, eastern, and island coastlines to inspect conditions.
+                Select a sample beach below to inspect its demonstration information. This is not a geographic map or live station feed.
               </Text>
 
               <View style={styles.stationsList}>
                 {catalogue.map((beach) => {
-                  const status = beach.assessment?.swimming?.status || 'suitable';
-                  const statusMeta = STATUS_META[status] || STATUS_META.suitable;
+                  const status = beach.assessment?.swimming?.status || 'insufficient';
+                  const statusMeta = STATUS_META[status] || STATUS_META.insufficient;
                   const isSelected = selectedBeach?.id === beach.id;
 
                   return (
@@ -175,9 +176,9 @@ export default function MapScreen({ navigation }) {
       ) : (
         /* Full List Mode */
         <ScrollView style={styles.listContainer} contentContainerStyle={styles.listContent}>
-          <Text style={styles.listHeaderTitle}>All Monitored Beaches</Text>
+          <Text style={styles.listHeaderTitle}>Sample Beaches</Text>
           {catalogue.map((beach) => {
-            const status = beach.assessment?.swimming?.status || 'suitable';
+            const status = beach.assessment?.swimming?.status || 'insufficient';
             const isSelected = selectedBeach?.id === beach.id;
             const distanceText = beach.distanceKm != null ? `${Number(beach.distanceKm).toFixed(1)} km` : 'Coastal India';
 
@@ -236,7 +237,7 @@ export default function MapScreen({ navigation }) {
             <View style={styles.bottomCardContent}>
               <View style={styles.bottomCardTopRow}>
                 <SuitabilityBadge
-                  status={selectedBeach.assessment?.swimming?.status || 'suitable'}
+                  status={selectedBeach.assessment?.swimming?.status || 'insufficient'}
                   size="small"
                 />
                 <Text style={styles.bottomCardDistance}>
@@ -257,13 +258,13 @@ export default function MapScreen({ navigation }) {
                 <View style={styles.bottomParamChip}>
                   <Ionicons name="water-outline" size={11} color={colors.ocean} />
                   <Text style={styles.bottomParamText}>
-                    Wave: {selectedBeach.conditions?.waveHeightM != null ? `${selectedBeach.conditions.waveHeightM}m` : '0.8m'}
+                    Wave: {selectedBeach.conditions?.waveHeightM != null ? `${selectedBeach.conditions.waveHeightM}m` : 'Not available'}
                   </Text>
                 </View>
                 <View style={styles.bottomParamChip}>
                   <Ionicons name="speedometer-outline" size={11} color={colors.teal} />
                   <Text style={styles.bottomParamText}>
-                    Wind: {selectedBeach.conditions?.windSpeedKmh != null ? `${selectedBeach.conditions.windSpeedKmh}k/h` : '16k/h'}
+                    Wind: {selectedBeach.conditions?.windSpeedKmh != null ? `${selectedBeach.conditions.windSpeedKmh} km/h` : 'Not available'}
                   </Text>
                 </View>
               </View>
