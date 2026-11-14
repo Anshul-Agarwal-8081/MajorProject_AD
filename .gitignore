@@ -55,3 +55,11 @@ start-web.sh
 
 # package-lock changes from npm --no-save installs
 package-lock.json
+
+# Backend environment secrets
+/server/.env
+/server/.env.*
+!/server/.env.example
+
+# Keep backend dependency lockfile
+!/server/package-lock.json
