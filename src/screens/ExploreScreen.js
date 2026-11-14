@@ -15,17 +15,6 @@ import { useCatalogue } from '../hooks/useCatalogue';
 import BeachCard from '../components/BeachCard';
 import SearchBar from '../components/SearchBar';
 
-const STATES_LIST = [
-  'All',
-  'Goa',
-  'Kerala',
-  'Tamil Nadu',
-  'Odisha',
-  'Karnataka',
-  'Maharashtra',
-  'Andaman and Nicobar Islands',
-];
-
 const ACTIVITIES_LIST = [
   { id: 'all', label: 'All Activities' },
   { id: 'swimming', label: 'Swimming' },
@@ -38,6 +27,7 @@ const SUITABILITY_LIST = [
   { id: 'suitable', label: 'Suitable' },
   { id: 'caution', label: 'Caution' },
   { id: 'notSuitable', label: 'Not Suitable' },
+  { id: 'insufficient', label: 'Insufficient Data' },
 ];
 
 const SORT_OPTIONS = [
@@ -59,13 +49,14 @@ export default function ExploreScreen({ route, navigation }) {
   const [selectedSort, setSelectedSort] = useState('distance');
 
   // Hook into project's filter engine
-  const { filtered } = useCatalogue({
+  const { catalogue, filtered } = useCatalogue({
     query,
     state: selectedState,
     activity: selectedActivity,
     suitability: selectedSuitability,
     sort: selectedSort,
   });
+  const statesList = ['All', ...new Set(catalogue.map((beach) => beach.state).filter(Boolean).sort((a, b) => a.localeCompare(b)))];
 
   const resetFilters = () => {
     setQuery('');
@@ -110,6 +101,10 @@ export default function ExploreScreen({ route, navigation }) {
           onClear={() => setQuery('')}
           placeholder="Filter by beach, city or state..."
         />
+        <TouchableOpacity style={styles.compareAction} onPress={() => navigation.navigate('Compare')} accessibilityRole="button">
+          <Ionicons name="git-compare-outline" size={17} color={colors.ocean} />
+          <Text style={styles.compareActionText}>Compare two beaches</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Filter Chips Bar */}
@@ -122,7 +117,7 @@ export default function ExploreScreen({ route, navigation }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalPills}
           >
-            {STATES_LIST.map((st) => {
+            {statesList.map((st) => {
               const isSelected = selectedState === st;
               return (
                 <TouchableOpacity
@@ -277,6 +272,8 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     backgroundColor: colors.foam,
   },
+  compareAction: { alignSelf: 'flex-start', marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.turquoiseSoft, paddingHorizontal: 11, paddingVertical: 8, borderRadius: 12 },
+  compareActionText: { color: colors.ocean, fontSize: 12, fontWeight: '700' },
   headerTitleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

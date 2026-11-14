@@ -9,9 +9,13 @@ import { getBeaches, getSavedBeaches } from '../services/beachService';
 export default function SavedScreen({ navigation }) {
   const { favorites, isFavorite, toggleFavorite } = useApp();
   const [beaches, setBeaches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   useEffect(() => {
     let active = true;
-    getBeaches().then(({ beaches: items }) => { if (active) setBeaches(items); });
+    getBeaches().then(({ beaches: items }) => { if (active) setBeaches(items); })
+      .catch(() => { if (active) setLoadError('Saved beaches could not be loaded. Please try again.'); })
+      .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
   const savedBeaches = useMemo(
@@ -39,7 +43,11 @@ export default function SavedScreen({ navigation }) {
         )}
         contentContainerStyle={savedBeaches.length ? styles.listContent : styles.emptyList}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={(
+        ListEmptyComponent={loading ? (
+          <View style={styles.emptyState}><Text style={styles.emptyTitle}>Loading saved beaches…</Text></View>
+        ) : loadError ? (
+          <View style={styles.emptyState}><Text style={styles.emptyText}>{loadError}</Text></View>
+        ) : (
           <View style={styles.emptyState}>
             <View style={styles.emptyIcon}>
               <Ionicons name="heart-outline" size={30} color="#0B3A5B" />

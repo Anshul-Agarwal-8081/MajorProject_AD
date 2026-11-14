@@ -1,6 +1,6 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# dependencies
+# Dependencies
 node_modules/
 
 # Expo
@@ -13,7 +13,7 @@ expo-env.d.ts
 .kotlin/
 *.orig.*
 *.jks
-*.p8 
+*.p8
 *.p12
 *.key
 *.mobileprovision
@@ -21,7 +21,7 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# debug
+# Debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
@@ -30,36 +30,31 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# Environment files and secrets
 .env*.local
+**/.env
+**/.env.*
+!**/.env.example
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 
-# generated native folders
+# Generated native folders
 /ios
 /android
 
-# ----------------------------------------------------------------
-# WEB PREVIEW — local only, never committed to git
-# This project is a MOBILE app. Web preview is for quick testing.
-# ----------------------------------------------------------------
-
-# Web packages are installed with --no-save so package.json stays
-# mobile-only. The script that does this is also excluded:
+# Web preview - local only
 start-web.sh
-
-# Web build output folders
 /web-build/
 /dist/
 
-# package-lock changes from npm --no-save installs
+# Ignore root lockfile changes from npm --no-save web installs
 package-lock.json
+
+# Keep backend dependency lockfile
+!/server/package-lock.json
 
 # Backend environment secrets
 /server/.env
 /server/.env.*
 !/server/.env.example
-
-# Keep backend dependency lockfile
-!/server/package-lock.json

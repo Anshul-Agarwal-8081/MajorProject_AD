@@ -1,16 +1,21 @@
 import { alertsForBeach } from '../data/alerts';
 import { beaches } from '../data/beaches';
+import { beaches as visitorDetails } from '../data/beachList';
 import { getConditions } from '../data/conditions';
 import { assessBeach } from '../services/suitabilityEngine';
 import { haversineKm } from './geo';
 
 export function buildCatalogue(origin) {
   return beaches.map((beach) => {
+    const visitorRecord = visitorDetails.find((item) => item.name === beach.name) || {};
     const conditions = getConditions(beach.id);
     const beachAlerts = alertsForBeach(beach);
     const assessment = assessBeach(conditions, beachAlerts, beach.waterQuality);
     return {
+      ...visitorRecord,
       ...beach,
+      facilities: beach.facilities || visitorRecord.facilities || [],
+      safety: beach.safety || beach.safetyNotes || visitorRecord.safety || [],
       conditions,
       alerts: beachAlerts,
       assessment,

@@ -18,19 +18,24 @@ import SuitabilityBadge from '../components/SuitabilityBadge';
 const { width, height } = Dimensions.get('window');
 
 const MAP_LEGEND_ITEMS = [
-  { label: 'Suitable', color: colors.suitable, desc: 'Safe for recreation' },
-  { label: 'Caution', color: colors.caution, desc: 'Moderate wave/current' },
-  { label: 'Not Suitable', color: colors.notSuitable, desc: 'High hazard risk' },
-  { label: 'Insufficient Data', color: colors.insufficient, desc: 'Unverified sensor' },
+  { label: 'Suitable', color: colors.suitable, desc: 'Sample category' },
+  { label: 'Caution', color: colors.caution, desc: 'Sample category' },
+  { label: 'Not Suitable', color: colors.notSuitable, desc: 'Sample category' },
+  { label: 'Insufficient Data', color: colors.insufficient, desc: 'No sample assessment' },
 ];
 
 export default function MapScreen({ navigation }) {
   const { catalogue } = useCatalogue();
-  const [selectedBeach, setSelectedBeach] = useState(catalogue[0] || null);
+  const [selectedState, setSelectedState] = useState('All');
+  const [selectedActivity, setSelectedActivity] = useState('swimming');
+  const states = ['All', ...new Set(catalogue.map((beach) => beach.state).filter(Boolean).sort())];
+  const visibleCatalogue = catalogue.filter((beach) => selectedState === 'All' || beach.state === selectedState);
+  const [selectedBeachId, setSelectedBeachId] = useState(catalogue[0]?.id || null);
+  const selectedBeach = visibleCatalogue.find((beach) => beach.id === selectedBeachId) || visibleCatalogue[0] || null;
   const [viewMode, setViewMode] = useState('radar'); // 'radar' | 'list'
 
   const handleMarkerSelect = (beach) => {
-    setSelectedBeach(beach);
+    setSelectedBeachId(beach.id);
   };
 
   const handleOpenDetail = (beach) => {
@@ -47,10 +52,10 @@ export default function MapScreen({ navigation }) {
           <View>
             <View style={styles.headerTitleRow}>
               <Ionicons name="map" size={20} color={colors.turquoiseSoft} />
-              <Text style={styles.headerTitle}>Coastal India Map</Text>
+              <Text style={styles.headerTitle}>Coastal India Overview</Text>
             </View>
             <Text style={styles.headerSubtitle}>
-              {catalogue.length} Monitored Coastal Stations
+              {visibleCatalogue.length} sample coastal locations
             </Text>
           </View>
 
@@ -95,11 +100,19 @@ export default function MapScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
+        <View style={styles.mapFilters}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.mapFilterRow}>
+            {states.map((state) => <TouchableOpacity key={state} onPress={() => setSelectedState(state)} style={[styles.mapFilter, selectedState === state && styles.mapFilterActive]}><Text style={[styles.mapFilterText, selectedState === state && styles.mapFilterTextActive]}>{state}</Text></TouchableOpacity>)}
+          </ScrollView>
+          <View style={styles.mapActivityRow}>
+            {['swimming', 'surfing', 'boating'].map((activity) => <TouchableOpacity key={activity} onPress={() => setSelectedActivity(activity)} style={[styles.mapActivity, selectedActivity === activity && styles.mapActivityActive]}><Text style={[styles.mapActivityText, selectedActivity === activity && styles.mapActivityTextActive]}>{activity[0].toUpperCase() + activity.slice(1)}</Text></TouchableOpacity>)}
+          </View>
+        </View>
       </SafeAreaView>
 
       {/* Main Map View Area */}
       {viewMode === 'radar' ? (
-        /* Coastal Radar & Interactive Schematic Map */
+        /* Coordinate-based schematic with selectable beach markers */
         <View style={styles.radarContainer}>
           <View style={styles.radarGridRing1} />
           <View style={styles.radarGridRing2} />
@@ -111,73 +124,30 @@ export default function MapScreen({ navigation }) {
           <Text style={styles.bayOfBengalLabel}>Bay of Bengal</Text>
           <Text style={styles.indianOceanLabel}>Indian Ocean</Text>
 
-          <ScrollView
-            contentContainerStyle={styles.schematicCanvas}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.coastOutlineCard}>
-              <View style={styles.coastOutlineHeader}>
-                <Ionicons name="compass-outline" size={18} color={colors.turquoise} />
-                <Text style={styles.coastOutlineTitle}>Indian Coastline Geo-Stations</Text>
-                <View style={styles.demoBadge}>
-                  <Text style={styles.demoBadgeText}>SIMULATED GPS</Text>
-                </View>
-              </View>
-
-              <Text style={styles.coastOutlineSub}>
-                Tap any station marker along the western, eastern, and island coastlines to inspect conditions.
-              </Text>
-
-              <View style={styles.stationsList}>
-                {catalogue.map((beach) => {
-                  const status = beach.assessment?.swimming?.status || 'suitable';
-                  const statusMeta = STATUS_META[status] || STATUS_META.suitable;
-                  const isSelected = selectedBeach?.id === beach.id;
-
-                  return (
-                    <TouchableOpacity
-                      key={beach.id}
-                      style={[
-                        styles.stationMarkerItem,
-                        isSelected && styles.stationMarkerItemSelected,
-                      ]}
-                      onPress={() => handleMarkerSelect(beach)}
-                      activeOpacity={0.85}
-                    >
-                      <View
-                        style={[
-                          styles.stationStatusDot,
-                          {
-                            backgroundColor: statusMeta.color,
-                          },
-                        ]}
-                      >
-                        <Ionicons name="water" size={10} color={colors.white} />
-                      </View>
-
-                      <View style={styles.stationTexts}>
-                        <Text style={styles.stationName} numberOfLines={1}>
-                          {beach.name}
-                        </Text>
-                        <Text style={styles.stationLocation}>
-                          {beach.city}, {beach.state}
-                        </Text>
-                      </View>
-
-                      <SuitabilityBadge status={status} size="small" />
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          </ScrollView>
+          <View style={styles.geoMap}>
+            {[1, 2, 3, 4].map((line) => <View key={`v${line}`} style={[styles.geoGridVertical, { left: `${line * 20}%` }]} />)}
+            {[1, 2, 3, 4].map((line) => <View key={`h${line}`} style={[styles.geoGridHorizontal, { top: `${line * 18}%` }]} />)}
+            <Text style={styles.geoLabelNorth}>22°N</Text><Text style={styles.geoLabelSouth}>8°N</Text>
+            {visibleCatalogue.filter((beach) => Number.isFinite(Number(beach.latitude)) && Number.isFinite(Number(beach.longitude))).map((beach) => {
+              const status = beach.assessment?.[selectedActivity]?.status || 'insufficient';
+              const statusMeta = STATUS_META[status] || STATUS_META.insufficient;
+              const left = Math.max(4, Math.min(94, ((Number(beach.longitude) - 70) / 26) * 100));
+              const top = Math.max(6, Math.min(88, ((24 - Number(beach.latitude)) / 18) * 100));
+              const isSelected = selectedBeach?.id === beach.id;
+              return <TouchableOpacity key={beach.id} style={[styles.geoMarker, { left: `${left}%`, top: `${top}%` }]} onPress={() => handleMarkerSelect(beach)} accessibilityRole="button" accessibilityLabel={`Select ${beach.name}, ${STATUS_META[status]?.label || 'Insufficient Data'}`}>
+                <View style={[styles.geoPin, { backgroundColor: statusMeta.color }, isSelected && styles.geoPinSelected]}><Ionicons name="water" size={10} color={colors.white} /></View>
+                {isSelected ? <Text style={styles.geoMarkerLabel} numberOfLines={1}>{beach.name}</Text> : null}
+              </TouchableOpacity>;
+            })}
+            <View style={styles.geoDisclaimer}><Text style={styles.geoDisclaimerText}>Schematic demo · approximate beach coordinates · sample statuses</Text></View>
+          </View>
         </View>
       ) : (
         /* Full List Mode */
         <ScrollView style={styles.listContainer} contentContainerStyle={styles.listContent}>
-          <Text style={styles.listHeaderTitle}>All Monitored Beaches</Text>
-          {catalogue.map((beach) => {
-            const status = beach.assessment?.swimming?.status || 'suitable';
+          <Text style={styles.listHeaderTitle}>Sample Beaches</Text>
+          {visibleCatalogue.map((beach) => {
+            const status = beach.assessment?.[selectedActivity]?.status || 'insufficient';
             const isSelected = selectedBeach?.id === beach.id;
             const distanceText = beach.distanceKm != null ? `${Number(beach.distanceKm).toFixed(1)} km` : 'Coastal India';
 
@@ -236,7 +206,7 @@ export default function MapScreen({ navigation }) {
             <View style={styles.bottomCardContent}>
               <View style={styles.bottomCardTopRow}>
                 <SuitabilityBadge
-                  status={selectedBeach.assessment?.swimming?.status || 'suitable'}
+                  status={selectedBeach.assessment?.[selectedActivity]?.status || 'insufficient'}
                   size="small"
                 />
                 <Text style={styles.bottomCardDistance}>
@@ -257,13 +227,13 @@ export default function MapScreen({ navigation }) {
                 <View style={styles.bottomParamChip}>
                   <Ionicons name="water-outline" size={11} color={colors.ocean} />
                   <Text style={styles.bottomParamText}>
-                    Wave: {selectedBeach.conditions?.waveHeightM != null ? `${selectedBeach.conditions.waveHeightM}m` : '0.8m'}
+                    Wave: {selectedBeach.conditions?.waveHeightM != null ? `${selectedBeach.conditions.waveHeightM}m` : 'Not available'}
                   </Text>
                 </View>
                 <View style={styles.bottomParamChip}>
                   <Ionicons name="speedometer-outline" size={11} color={colors.teal} />
                   <Text style={styles.bottomParamText}>
-                    Wind: {selectedBeach.conditions?.windSpeedKmh != null ? `${selectedBeach.conditions.windSpeedKmh}k/h` : '16k/h'}
+                    Wind: {selectedBeach.conditions?.windSpeedKmh != null ? `${selectedBeach.conditions.windSpeedKmh} km/h` : 'Not available'}
                   </Text>
                 </View>
               </View>
@@ -302,6 +272,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
+  mapFilters: { paddingHorizontal: 12, paddingBottom: 8, gap: 6 },
+  mapFilterRow: { gap: 6, paddingVertical: 2 },
+  mapFilter: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.1)' },
+  mapFilterActive: { backgroundColor: colors.teal },
+  mapFilterText: { color: colors.turquoiseSoft, fontSize: 10, fontWeight: '600' },
+  mapFilterTextActive: { color: colors.white },
+  mapActivityRow: { flexDirection: 'row', gap: 6 },
+  mapActivity: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.08)' },
+  mapActivityActive: { backgroundColor: colors.ocean },
+  mapActivityText: { color: colors.turquoiseSoft, fontSize: 10 },
+  mapActivityTextActive: { color: colors.white, fontWeight: '700' },
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -350,6 +331,17 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
+  geoMap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', backgroundColor: '#0A3048' },
+  geoGridVertical: { position: 'absolute', top: 0, bottom: 0, width: 1, backgroundColor: 'rgba(216,244,243,0.12)' },
+  geoGridHorizontal: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: 'rgba(216,244,243,0.12)' },
+  geoLabelNorth: { position: 'absolute', top: 10, left: 10, color: colors.turquoiseSoft, fontSize: 10 },
+  geoLabelSouth: { position: 'absolute', bottom: 155, left: 10, color: colors.turquoiseSoft, fontSize: 10 },
+  geoMarker: { position: 'absolute', width: 34, minHeight: 34, alignItems: 'center', justifyContent: 'center', marginLeft: -17, marginTop: -17, zIndex: 2 },
+  geoPin: { width: 23, height: 23, borderRadius: 12, borderWidth: 2, borderColor: colors.white, alignItems: 'center', justifyContent: 'center' },
+  geoPinSelected: { width: 30, height: 30, borderRadius: 15, borderWidth: 3, borderColor: colors.turquoiseSoft },
+  geoMarkerLabel: { maxWidth: 132, color: colors.white, fontSize: 10, fontWeight: '700', backgroundColor: 'rgba(7,38,60,0.92)', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6 },
+  geoDisclaimer: { position: 'absolute', left: 10, right: 10, bottom: 112, alignItems: 'center' },
+  geoDisclaimerText: { color: colors.turquoiseSoft, backgroundColor: 'rgba(7,38,60,0.82)', fontSize: 9, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8 },
   radarGridRing1: {
     position: 'absolute',
     top: height * 0.15,

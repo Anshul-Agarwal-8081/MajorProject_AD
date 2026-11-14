@@ -56,12 +56,12 @@ export default function AlertCard({ alert, onPress }) {
       <View style={styles.footerRow}>
         <View style={styles.timeRow}>
           <Ionicons name="time-outline" size={12} color={colors.muted} />
-          <Text style={styles.timeText}>{alert.issuedAt || 'Active Bulletin'}</Text>
+          <Text style={styles.timeText}>{alert.issuedAt || 'Sample bulletin'}</Text>
         </View>
 
         <View style={[styles.statusTag, { backgroundColor: accentColor + '15' }]}>
           <View style={[styles.statusDot, { backgroundColor: accentColor }]} />
-          <Text style={[styles.statusText, { color: accentColor }]}>Active</Text>
+          <Text style={[styles.statusText, { color: accentColor }]}>Sample</Text>
         </View>
       </View>
 
